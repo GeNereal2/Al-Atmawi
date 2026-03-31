@@ -34,6 +34,7 @@ body {
   color: var(--text);
   line-height: 1.8;
   overflow-x: hidden;
+  padding-top: 95px;
 }
 
 button,
@@ -137,11 +138,14 @@ ul {
   width: 100%;
 }
 
+/* ===== الهيدر ثابت فوق دائمًا ===== */
 .topbar {
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 999;
-  background: rgba(255, 247, 240, 0.94);
+  left: 0;
+  width: 100%;
+  z-index: 9999;
+  background: rgba(255, 247, 240, 0.97);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(78, 47, 36, 0.08);
 }
@@ -510,8 +514,10 @@ footer {
   text-align: center;
 }
 
+/* ===== صفحة الأدمن ===== */
 .admin-page-body {
   min-height: 100vh;
+  padding-top: 110px;
 }
 
 .admin-page-section {
@@ -791,6 +797,11 @@ footer {
     padding: 70px 0;
   }
 
+  body {
+    padding-top: 110px;
+  }
+
+  /* الموقع الرئيسي */
   .navbar {
     flex-direction: column;
     justify-content: center;
@@ -806,6 +817,29 @@ footer {
   .nav-links a {
     padding: 8px 12px;
     font-size: 0.95rem;
+  }
+
+  /* صفحة الأدمن فقط */
+  .admin-page-body .navbar {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    text-align: initial;
+    gap: 10px;
+  }
+
+  .admin-page-body .nav-links {
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+  }
+
+  .admin-page-body .logo {
+    font-size: 1.2rem;
+  }
+
+  .admin-page-body .nav-links a {
+    padding: 8px 10px;
+    font-size: 0.88rem;
   }
 
   .hero {
@@ -898,42 +932,13 @@ footer {
     padding: 12px 16px;
     font-size: 0.92rem;
   }
-}
 
-  .card-image {
-    aspect-ratio: 1 / 1;
-    padding: 14px;
+  .admin-page-body .logo {
+    font-size: 1.05rem;
   }
 
-  .card-image img {
-    max-width: 70%;
-    max-height: 70%;
-  }
-
-  .product-image {
-    height: 190px;
-  }
-
-  .hero-buttons {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .hero-buttons .btn {
-    width: 100%;
-    max-width: 260px;
-  }
-
-  .section-header h2,
-  .about-box h2,
-  .contact-box h2 {
-    font-size: 1.8rem;
-  }
-
-  .whatsapp-float {
-    left: 14px;
-    bottom: 14px;
-    padding: 12px 16px;
-    font-size: 0.92rem;
+  .admin-page-body .nav-links a {
+    font-size: 0.82rem;
+    padding: 7px 9px;
   }
 }
