@@ -204,7 +204,7 @@ ul {
   overflow: hidden;
   background:
     linear-gradient(rgba(47, 27, 20, 0.55), rgba(47, 27, 20, 0.6)),
-    url("https://images.unsplash.com/photo-1511381939415-e44015466834?auto=format&fit=crop&w=1600&q=80") center/cover no-repeat;
+    url("https://media.discordapp.net/attachments/1283432443516424263/1488483822587875328/11.png?ex=69ccf215&is=69cba095&hm=b5a3c968173f4ea27c83eff046983c4b8af635eb4a42411f00185166a09327e6&=&format=webp&quality=lossless&width=1392&height=928") center/cover no-repeat;
 }
 
 .hero::before,
