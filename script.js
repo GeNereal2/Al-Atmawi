@@ -8,7 +8,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* =========================
-   ضع بيانات Firebase هنا
+   Firebase Config
 ========================= */
 const firebaseConfig = {
   apiKey: "AIzaSyAoxZQ96uziaGETAEWH0BONmgPPUoa-wD8",
