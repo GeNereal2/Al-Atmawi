@@ -20,7 +20,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 /* =========================
-   ضع بيانات Firebase هنا
+   Firebase Config
 ========================= */
 const firebaseConfig = {
   apiKey: "AIzaSyAoxZQ96uziaGETAEWH0BONmgPPUoa-wD8",
@@ -42,11 +42,9 @@ let products = [];
 /* Auth */
 const loginBox = document.getElementById("loginBox");
 const dashboardBox = document.getElementById("dashboardBox");
-
 const loginForm = document.getElementById("loginForm");
 const loginEmail = document.getElementById("loginEmail");
 const loginPassword = document.getElementById("loginPassword");
-
 const logoutBtn = document.getElementById("logoutBtn");
 const adminDisplayName = document.getElementById("adminDisplayName");
 
@@ -59,7 +57,6 @@ const companyImageInput = document.getElementById("companyImage");
 const companyImageFileInput = document.getElementById("companyImageFile");
 const companyImageDataInput = document.getElementById("companyImageData");
 const companyPreview = document.getElementById("companyPreview");
-
 const companyFormTitle = document.getElementById("companyFormTitle");
 const companySubmitBtn = document.getElementById("companySubmitBtn");
 const cancelCompanyEditBtn = document.getElementById("cancelCompanyEditBtn");
@@ -75,7 +72,6 @@ const productImageInput = document.getElementById("productImage");
 const productImageFileInput = document.getElementById("productImageFile");
 const productImageDataInput = document.getElementById("productImageData");
 const productPreview = document.getElementById("productPreview");
-
 const productFormTitle = document.getElementById("productFormTitle");
 const productSubmitBtn = document.getElementById("productSubmitBtn");
 const cancelProductEditBtn = document.getElementById("cancelProductEditBtn");
@@ -96,18 +92,14 @@ function showMessage(form, message, type = "success") {
   div.textContent = message;
   form.appendChild(div);
 
-  setTimeout(() => {
-    div.remove();
-  }, 3000);
+  setTimeout(() => div.remove(), 3000);
 }
 
 function readFileAsDataURL(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-
     reader.onload = () => resolve(reader.result);
     reader.onerror = () => reject(new Error("فشل في قراءة الصورة"));
-
     reader.readAsDataURL(file);
   });
 }
@@ -134,7 +126,7 @@ async function handleImageSelection(fileInput, hiddenInput, previewElement) {
     hiddenInput.value = dataUrl;
     previewElement.src = dataUrl;
     previewElement.classList.remove("hidden");
-  } catch (_) {
+  } catch {
     alert("حدث خطأ أثناء قراءة الصورة");
   }
 }
@@ -345,14 +337,9 @@ async function deleteCompany(companyId) {
 
     await deleteDoc(doc(db, "companies", companyId));
 
-    if (String(companyIdInput.value) === String(companyId)) {
-      resetCompanyForm();
-    }
-
-    if (String(productCompanyInput.value) === String(companyId)) {
-      resetProductForm();
-    }
-  } catch (_) {
+    if (String(companyIdInput.value) === String(companyId)) resetCompanyForm();
+    if (String(productCompanyInput.value) === String(companyId)) resetProductForm();
+  } catch {
     alert("حدث خطأ أثناء حذف الشركة");
   }
 }
@@ -366,11 +353,8 @@ async function deleteProduct(productId) {
 
   try {
     await deleteDoc(doc(db, "products", productId));
-
-    if (String(productIdInput.value) === String(productId)) {
-      resetProductForm();
-    }
-  } catch (_) {
+    if (String(productIdInput.value) === String(productId)) resetProductForm();
+  } catch {
     alert("حدث خطأ أثناء حذف المنتج");
   }
 }
@@ -389,7 +373,7 @@ loginForm.addEventListener("submit", async function (e) {
   try {
     await signInWithEmailAndPassword(auth, email, password);
     loginForm.reset();
-  } catch (_) {
+  } catch {
     showMessage(loginForm, "البريد الإلكتروني أو كلمة المرور غير صحيحة", "error");
   }
 });
@@ -397,7 +381,7 @@ loginForm.addEventListener("submit", async function (e) {
 logoutBtn.addEventListener("click", async function () {
   try {
     await signOut(auth);
-  } catch (_) {
+  } catch {
     alert("حدث خطأ أثناء تسجيل الخروج");
   }
 });
@@ -417,7 +401,6 @@ companyImageInput.addEventListener("input", () => {
     companyImageDataInput.value = "";
     companyImageFileInput.value = "";
   }
-
   updatePreviewFromUrl(companyImageInput.value, companyPreview, companyImageDataInput);
 });
 
@@ -426,7 +409,6 @@ productImageInput.addEventListener("input", () => {
     productImageDataInput.value = "";
     productImageFileInput.value = "";
   }
-
   updatePreviewFromUrl(productImageInput.value, productPreview, productImageDataInput);
 });
 
@@ -474,7 +456,7 @@ companyForm.addEventListener("submit", async function (e) {
     }
 
     resetCompanyForm();
-  } catch (_) {
+  } catch {
     showMessage(companyForm, "حدث خطأ أثناء حفظ الشركة", "error");
   }
 });
@@ -524,7 +506,7 @@ productForm.addEventListener("submit", async function (e) {
     }
 
     resetProductForm();
-  } catch (_) {
+  } catch {
     showMessage(productForm, "حدث خطأ أثناء حفظ المنتج", "error");
   }
 });
@@ -539,7 +521,6 @@ function listenToCompanies() {
       id: docSnap.id,
       ...docSnap.data()
     }));
-
     renderDashboardData();
   });
 }
@@ -552,7 +533,6 @@ function listenToProducts() {
       id: docSnap.id,
       ...docSnap.data()
     }));
-
     renderDashboardData();
   });
 }
