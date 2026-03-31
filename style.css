@@ -339,6 +339,9 @@ ul {
   box-shadow: 0 18px 38px rgba(78, 47, 36, 0.16);
 }
 
+/* =========================
+   COMPANY LOGOS (FIXED SIZE)
+========================= */
 .card-image {
   width: 100%;
   aspect-ratio: 1 / 1;
@@ -347,18 +350,23 @@ ul {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 18px;
 }
 
 .card-image img {
-  width: 100%;
-  height: 100%;
+  width: auto;
+  max-width: 78%;
+  max-height: 78%;
+  height: auto;
   object-fit: contain;
   object-position: center;
   background: #fff;
-  padding: 14px;
   transition: transform 0.35s ease;
 }
 
+/* =========================
+   PRODUCTS IMAGES
+========================= */
 .product-card {
   min-height: 100%;
 }
@@ -826,6 +834,12 @@ footer {
 
   .card-image {
     aspect-ratio: 1 / 1;
+    padding: 14px;
+  }
+
+  .card-image img {
+    max-width: 70%;
+    max-height: 70%;
   }
 
   .product-image {
