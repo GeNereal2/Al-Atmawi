@@ -27,7 +27,7 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 const OWNER_ADMIN = "alimohey586@gmail.com";
-const VIEWER_ADMIN = "mohammedahmad@gmail.com";
+const VIEWER_ADMIN = "private@gmail.com";
 
 let currentUser = null;
 let activeCompanyId = "all";
