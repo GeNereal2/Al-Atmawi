@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>لوحة الأدمن - Al-Atmawi Sweets</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="admin-page-body">
+
+  <header class="topbar">
+    <div class="container navbar admin-navbar">
+      <a href="index.html" class="logo">Al-Atmawi <span>Sweets</span></a>
+
+      <nav class="admin-nav">
+        <a href="index.html" class="admin-back-btn">العودة للموقع</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="section admin-page-section">
+    <div class="container">
+      <div class="section-header">
+        <h2>لوحة الأدمن</h2>
+        <p>إدارة الشركات والمنتجات</p>
+      </div>
+
+      <div id="loginBox" class="admin-auth-box">
+        <h3>تسجيل دخول الأدمن</h3>
+        <p class="admin-note">أدخل البريد الإلكتروني وكلمة المرور.</p>
+
+        <form id="loginForm" class="admin-form single-column">
+          <div class="form-group">
+            <label for="loginEmail">البريد الإلكتروني</label>
+            <input type="email" id="loginEmail" required />
+          </div>
+
+          <div class="form-group">
+            <label for="loginPassword">كلمة المرور</label>
+            <input type="password" id="loginPassword" required />
+          </div>
+
+          <button type="submit" class="btn btn-primary full-btn">تسجيل الدخول</button>
+        </form>
+      </div>
+
+      <div id="dashboardBox" class="hidden">
+        <div class="dashboard-topbar">
+          <div>
+            <h3>مرحبًا <span id="adminDisplayName">Admin</span></h3>
+            <p class="admin-note">من هنا تقدر تدير الشركات والمنتجات حسب صلاحيتك.</p>
+            <p id="adminRoleLabel" class="admin-note"></p>
+          </div>
+
+          <button id="logoutBtn" class="btn btn-outline">تسجيل الخروج</button>
+        </div>
+
+        <div class="admin-grid-2">
+          <div class="panel-card" id="companyFormCard">
+            <div class="panel-head">
+              <h3 id="companyFormTitle">إضافة شركة جديدة</h3>
+              <button id="cancelCompanyEditBtn" class="btn btn-light hidden" type="button">إلغاء التعديل</button>
+            </div>
+
+            <form id="companyForm" class="admin-form">
+              <input type="hidden" id="companyId" />
+              <input type="hidden" id="companyImageData" />
+
+              <div class="form-group">
+                <label for="companyName">اسم الشركة</label>
+                <input type="text" id="companyName" required />
+              </div>
+
+              <div class="form-group">
+                <label for="companyImageFile">صورة الشركة من الجهاز</label>
+                <input type="file" id="companyImageFile" accept="image/*" />
+              </div>
+
+              <div class="form-group">
+                <label for="companyImage">أو رابط صورة الشركة</label>
+                <input type="url" id="companyImage" placeholder="اختياري إذا لم ترفع صورة من الجهاز" />
+              </div>
+
+              <div class="image-preview-box">
+                <p>معاينة صورة الشركة</p>
+                <img id="companyPreview" class="image-preview hidden" alt="معاينة صورة الشركة" />
+              </div>
+
+              <button type="submit" class="btn btn-primary full-btn" id="companySubmitBtn">إضافة الشركة</button>
+            </form>
+          </div>
+
+          <div class="panel-card" id="productFormCard">
+            <div class="panel-head">
+              <h3 id="productFormTitle">إضافة منتج جديد</h3>
+              <button id="cancelProductEditBtn" class="btn btn-light hidden" type="button">إلغاء التعديل</button>
+            </div>
+
+            <form id="productForm" class="admin-form">
+              <input type="hidden" id="productId" />
+              <input type="hidden" id="productImageData" />
+
+              <div class="form-group">
+                <label for="productCompany">الشركة</label>
+                <select id="productCompany" required></select>
+              </div>
+
+              <div class="form-group">
+                <label for="productName">اسم المنتج</label>
+                <input type="text" id="productName" required />
+              </div>
+
+              <div class="form-group">
+                <label for="productDesc">وصف المنتج / السعر</label>
+                <textarea id="productDesc" required></textarea>
+              </div>
+
+              <div class="form-group">
+                <label for="productImageFile">صورة المنتج من الجهاز</label>
+                <input type="file" id="productImageFile" accept="image/*" />
+              </div>
+
+              <div class="form-group">
+                <label for="productImage">أو رابط صورة المنتج</label>
+                <input type="url" id="productImage" placeholder="اختياري إذا لم ترفع صورة من الجهاز" />
+              </div>
+
+              <div class="image-preview-box">
+                <p>معاينة صورة المنتج</p>
+                <img id="productPreview" class="image-preview hidden" alt="معاينة صورة المنتج" />
+              </div>
+
+              <button type="submit" class="btn btn-primary full-btn" id="productSubmitBtn">إضافة المنتج</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="admin-grid-2 admin-panels-gap">
+          <div class="panel-card">
+            <div class="panel-head">
+              <h3>إدارة الشركات</h3>
+            </div>
+            <div id="adminCompaniesList" class="admin-items-list"></div>
+          </div>
+
+          <div class="panel-card">
+            <div class="panel-head">
+              <h3>إدارة المنتجات</h3>
+            </div>
+            <div id="adminProductsList" class="admin-items-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script type="module" src="admin.js?v=2"></script>
+</body>
+</html>
