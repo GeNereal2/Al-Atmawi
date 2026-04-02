@@ -4,58 +4,53 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Al-Atmawi Sweets</title>
-  <link rel="stylesheet" href="style.css?v=3" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
   <header class="topbar">
     <div class="container navbar">
-      <a href="#" class="logo">Al-Atmawi <span>Sweets</span></a>
+      <a href="index.html" class="logo">Al-Atmawi <span>Sweets</span></a>
 
-      <nav class="nav-links">
-        <a href="#brands">الشركات</a>
-        <a href="#products">المنتجات</a>
-        <a href="admin.html" class="admin-link">لوحة الأدمن</a>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="#home">الرئيسية</a></li>
+          <li><a href="#brands">الشركات</a></li>
+          <li><a href="#products">المنتجات</a></li>
+          <li><a href="#about">من نحن</a></li>
+          <li><a href="#contact">تواصل معنا</a></li>
+          <li><a href="admin.html" class="admin-link">لوحة الأدمن</a></li>
+        </ul>
       </nav>
     </div>
   </header>
 
-  <section class="hero">
-    <div class="container hero-content">
-      <div class="hero-text">
-        <span class="hero-badge">حلويات بالجملة</span>
-        <h1>منصة العطاوي للحلويات والشركات التجارية</h1>
-        <p>
-          استعرض الشركات والمنتجات المتوفرة لدينا بسهولة، وتصفح أصناف الحلويات والمنتجات التجارية بشكل منظم ومرتب.
-        </p>
+  <section class="hero" id="home">
+    <div class="container">
+      <div class="hero-content">
+        <h1>اكتشف عالم الحلويات اللذيذة</h1>
+        <p>نوفر أجود أنواع الشوكولاتة والسكاكر من أشهر الشركات العالمية بجودة عالية ومذاق مميز.</p>
 
-        <div class="hero-actions">
-          <a href="#brands" class="btn btn-primary">تصفح الشركات</a>
-          <a href="#products" class="btn btn-outline">استعرض المنتجات</a>
+        <div class="hero-buttons">
+          <a href="#products" class="btn btn-primary">تصفح المنتجات</a>
+          <a href="#contact" class="btn btn-secondary">تواصل معنا</a>
         </div>
-      </div>
-
-      <div class="hero-image-card">
-        <img
-          src="https://images.unsplash.com/photo-1511381939415-e44015466834?q=80&w=1200&auto=format&fit=crop"
-          alt="حلويات"
-        />
       </div>
     </div>
   </section>
 
-  <section id="brands" class="section">
+  <section class="section brands" id="brands">
     <div class="container">
       <div class="section-header">
         <h2>الشركات</h2>
-        <p>تصفح الشركات المتوفرة لدينا</p>
+        <p>اختر الشركة التي تريد تصفح منتجاتها</p>
       </div>
 
       <div id="brandsGrid" class="cards-grid"></div>
     </div>
   </section>
 
-  <section id="products" class="section alt-bg">
+  <section class="section" id="products">
     <div class="container">
       <div class="section-header">
         <h2 id="productsSectionTitle">المنتجات</h2>
@@ -63,17 +58,54 @@
       </div>
 
       <div id="filtersBar" class="filters-bar"></div>
-
       <div id="productsGrid" class="products-grid"></div>
     </div>
   </section>
 
-  <footer class="footer">
+  <section class="section" id="about">
+    <div class="container">
+      <div class="about-box">
+        <h2>من نحن</h2>
+        <p>
+          محل متخصص في بيع السكاكر والحلويات والشوكولاتة من أفضل الشركات العالمية،
+          ونحرص دائمًا على تقديم جودة عالية وتنوع كبير وخدمة ممتازة.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="contact">
+    <div class="container">
+      <div class="contact-box">
+        <h2>تواصل معنا</h2>
+        <p>للاستفسار أو الطلبات، يمكنك التواصل معنا مباشرة</p>
+
+        <div class="contact-grid">
+          <div class="contact-card">
+            <h3>الهاتف</h3>
+            <p><a href="tel:+970599202276">+970 599 202 276</a></p>
+          </div>
+
+          <div class="contact-card">
+            <h3>واتساب</h3>
+            <p><a href="https://wa.me/970599202276" target="_blank">راسلنا</a></p>
+          </div>
+
+          <div class="contact-card">
+            <h3>فيسبوك</h3>
+            <p><a href="https://www.facebook.com/Atmawe" target="_blank">صفحتي</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
     <div class="container footer-content">
-      <p>© 2026 Al-Atmawi Sweets - جميع الحقوق محفوظة</p>
+      <p>CopyRight @Al-Atmawi Sweets © 2026</p>
     </div>
   </footer>
 
-  <script type="module" src="script.js?v=99"></script>
+  <script type="module" src="script.js?v=3"></script>
 </body>
 </html>
