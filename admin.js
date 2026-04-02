@@ -125,7 +125,7 @@ function showMessage(form, message, type = "success") {
   div.textContent = message;
   form.appendChild(div);
 
-  setTimeout(() => div.remove(), 3000);
+  setTimeout(() => div.remove(), 4000);
 }
 
 function stopListeners() {
@@ -140,6 +140,9 @@ function stopListeners() {
   }
 }
 
+/* =========================
+   Image Compression
+========================= */
 function readFileAsDataURL(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -149,30 +152,118 @@ function readFileAsDataURL(file) {
   });
 }
 
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("فشل في تحميل الصورة"));
+    img.src = src;
+  });
+}
+
+async function compressImageFile(file, options = {}) {
+  const {
+    maxWidth = 1400,
+    maxHeight = 1400,
+    quality = 0.82,
+    outputType = "image/jpeg",
+    maxBase64Length = 850000
+  } = options;
+
+  const originalDataUrl = await readFileAsDataURL(file);
+  const img = await loadImage(originalDataUrl);
+
+  let width = img.width;
+  let height = img.height;
+
+  const ratio = Math.min(maxWidth / width, maxHeight / height, 1);
+  width = Math.round(width * ratio);
+  height = Math.round(height * ratio);
+
+  let canvas = document.createElement("canvas");
+  let ctx = canvas.getContext("2d");
+
+  canvas.width = width;
+  canvas.height = height;
+
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, width, height);
+  ctx.drawImage(img, 0, 0, width, height);
+
+  let currentQuality = quality;
+  let result = canvas.toDataURL(outputType, currentQuality);
+
+  while (result.length > maxBase64Length && currentQuality > 0.45) {
+    currentQuality -= 0.07;
+    result = canvas.toDataURL(outputType, currentQuality);
+  }
+
+  if (result.length > maxBase64Length) {
+    let scaledWidth = width;
+    let scaledHeight = height;
+
+    while (result.length > maxBase64Length && scaledWidth > 500 && scaledHeight > 500) {
+      scaledWidth = Math.round(scaledWidth * 0.9);
+      scaledHeight = Math.round(scaledHeight * 0.9);
+
+      canvas = document.createElement("canvas");
+      ctx = canvas.getContext("2d");
+      canvas.width = scaledWidth;
+      canvas.height = scaledHeight;
+
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, scaledWidth, scaledHeight);
+      ctx.drawImage(img, 0, 0, scaledWidth, scaledHeight);
+
+      result = canvas.toDataURL(outputType, currentQuality);
+    }
+  }
+
+  if (result.length > maxBase64Length) {
+    throw new Error("الصورة كبيرة جدًا حتى بعد الضغط. اختر صورة بحجم أقل.");
+  }
+
+  return result;
+}
+
 async function handleImageSelection(fileInput, hiddenInput, previewElement) {
   const file = fileInput.files[0];
   if (!file) return;
 
-  if (!file.type.startsWith("image/")) {
-    alert("الملف المختار ليس صورة");
-    fileInput.value = "";
-    return;
-  }
+  const allowedTypes = [
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/webp"
+  ];
 
-  const maxSize = 2 * 1024 * 1024;
-  if (file.size > maxSize) {
-    alert("حجم الصورة كبير جدًا. اختر صورة أقل من 2MB");
+  if (!allowedTypes.includes(file.type)) {
+    alert("صيغة الصورة غير مدعومة. استخدم JPG أو PNG أو WEBP");
     fileInput.value = "";
     return;
   }
 
   try {
-    const dataUrl = await readFileAsDataURL(file);
-    hiddenInput.value = dataUrl;
-    previewElement.src = dataUrl;
+    previewElement.src = "";
+    previewElement.classList.add("hidden");
+
+    const compressedDataUrl = await compressImageFile(file, {
+      maxWidth: 1400,
+      maxHeight: 1400,
+      quality: 0.82,
+      outputType: "image/jpeg",
+      maxBase64Length: 850000
+    });
+
+    hiddenInput.value = compressedDataUrl;
+    previewElement.src = compressedDataUrl;
     previewElement.classList.remove("hidden");
-  } catch {
-    alert("حدث خطأ أثناء قراءة الصورة");
+  } catch (error) {
+    alert(error.message || "حدث خطأ أثناء تجهيز الصورة");
+    fileInput.value = "";
+    hiddenInput.value = "";
+    previewElement.src = "";
+    previewElement.classList.add("hidden");
   }
 }
 
@@ -527,9 +618,9 @@ companyForm.addEventListener("submit", async function (e) {
   const image = companyImageDataInput.value.trim() || companyImageInput.value.trim();
 
   if (!name || !image) {
-  showMessage(companyForm, "يرجى تعبئة اسم الشركة والصورة", "error");
-  return;
-}
+    showMessage(companyForm, "يرجى تعبئة اسم الشركة والصورة", "error");
+    return;
+  }
 
   const duplicate = companies.find(company =>
     company.name.trim().toLowerCase() === name.toLowerCase() &&
@@ -543,25 +634,26 @@ companyForm.addEventListener("submit", async function (e) {
 
   try {
     if (id) {
- await updateDoc(doc(db, "companies", id), {
-  name,
-  image,
-  updatedAt: serverTimestamp()
-});
+      await updateDoc(doc(db, "companies", id), {
+        name,
+        image,
+        updatedAt: serverTimestamp()
+      });
       showMessage(companyForm, "تم تعديل الشركة بنجاح", "success");
     } else {
- await addDoc(collection(db, "companies"), {
-  name,
-  image,
-  createdAt: serverTimestamp(),
-  updatedAt: serverTimestamp()
-});
+      await addDoc(collection(db, "companies"), {
+        name,
+        image,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
       showMessage(companyForm, "تمت إضافة الشركة بنجاح", "success");
     }
 
     resetCompanyForm();
-  } catch {
-    showMessage(companyForm, "حدث خطأ أثناء حفظ الشركة", "error");
+  } catch (error) {
+    console.error(error);
+    showMessage(companyForm, error.message || "حدث خطأ أثناء حفظ الشركة", "error");
   }
 });
 
@@ -615,8 +707,9 @@ productForm.addEventListener("submit", async function (e) {
     }
 
     resetProductForm();
-  } catch {
-    showMessage(productForm, "حدث خطأ أثناء حفظ المنتج", "error");
+  } catch (error) {
+    console.error(error);
+    showMessage(productForm, error.message || "حدث خطأ أثناء حفظ المنتج", "error");
   }
 });
 
