@@ -40,7 +40,7 @@ const auth = getAuth(app);
    Roles
 ========================= */
 const OWNER_ADMIN = "alimohey586@gmail.com";
-const VIEWER_ADMIN = "mohammedahmad@gmail.com";
+const VIEWER_ADMIN = "private@gmail.com";
 
 function getUserRole(user) {
   if (!user || !user.email) return null;
