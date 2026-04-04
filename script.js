@@ -4,8 +4,7 @@ import {
   collection,
   getDocs,
   query,
-  orderBy,
-  where
+  orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import {
@@ -35,10 +34,7 @@ let activeCompanyId = "all";
 let companies = [];
 let allProducts = [];
 let visibleProducts = [];
-let allProductsLoaded = false;
 let isLoadingProducts = false;
-
-const companyProductsCache = new Map();
 
 const brandsGrid = document.getElementById("brandsGrid");
 const filtersBar = document.getElementById("filtersBar");
@@ -56,6 +52,10 @@ function escapeHtml(text) {
   const div = document.createElement("div");
   div.textContent = text ?? "";
   return div.innerHTML;
+}
+
+function normalizeText(value) {
+  return String(value ?? "").trim().toLowerCase();
 }
 
 function getCompanyById(companyId) {
@@ -81,7 +81,7 @@ function renderBrands() {
     <div class="card">
       <div class="card-image">
         <img
-          src="${escapeHtml(company.image)}"
+          src="${escapeHtml(company.image || "")}"
           alt="${escapeHtml(company.name)}"
           loading="lazy"
           decoding="async"
@@ -133,9 +133,7 @@ function renderProducts() {
   let title = "المنتجات";
 
   if (activeCompanyId !== "all") {
-    const selectedCompany = companies.find(
-      company => String(company.id) === String(activeCompanyId)
-    );
+    const selectedCompany = getCompanyById(activeCompanyId);
 
     if (selectedCompany) {
       title = `منتجات ${selectedCompany.name}`;
@@ -162,7 +160,7 @@ function renderProducts() {
       <div class="product-card">
         <div class="product-image">
           <img
-            src="${escapeHtml(product.image)}"
+            src="${escapeHtml(product.image || "")}"
             alt="${escapeHtml(product.name)}"
             loading="lazy"
             decoding="async"
@@ -171,92 +169,33 @@ function renderProducts() {
         <div class="product-content">
           ${company ? `<span class="brand-badge">${escapeHtml(company.name)}</span>` : ""}
           <h4>${escapeHtml(product.name)}</h4>
-          ${showPrices ? `<p>${escapeHtml(product.desc)}</p>` : ""}
+          ${showPrices ? `<p>${escapeHtml(product.desc || "")}</p>` : ""}
         </div>
       </div>
     `;
   }).join("");
 }
 
-async function loadAllProducts() {
-  if (allProductsLoaded) {
-    visibleProducts = allProducts;
-    return;
-  }
+function getProductsForCompany(companyId) {
+  const selectedCompany = getCompanyById(companyId);
+  if (!selectedCompany) return [];
 
-  setProductsLoadingState("جاري تحميل جميع المنتجات...");
+  const selectedCompanyId = normalizeText(selectedCompany.id);
+  const selectedCompanyName = normalizeText(selectedCompany.name);
 
-  try {
-    const productsQuery = query(
-      collection(db, "products"),
-      orderBy("createdAt", "desc")
+  return allProducts.filter(product => {
+    const productCompanyId = normalizeText(product.companyId);
+    const productCompanyName = normalizeText(product.companyName);
+    const productBrand = normalizeText(product.brand);
+    const productCategory = normalizeText(product.category);
+
+    return (
+      productCompanyId === selectedCompanyId ||
+      productCompanyName === selectedCompanyName ||
+      productBrand === selectedCompanyName ||
+      productCategory === selectedCompanyName
     );
-
-    const snapshot = await getDocs(productsQuery);
-
-    allProducts = snapshot.docs.map(docSnap => ({
-      id: docSnap.id,
-      ...docSnap.data()
-    }));
-
-    allProductsLoaded = true;
-    visibleProducts = allProducts;
-  } catch (error) {
-    console.error(error);
-    productsGrid.innerHTML = `<div class="empty-message">حدث خطأ أثناء تحميل المنتجات</div>`;
-    visibleProducts = [];
-  } finally {
-    clearProductsLoadingState();
-  }
-}
-
-async function loadProductsByCompany(companyId) {
-  const cacheKey = String(companyId);
-
-  if (companyProductsCache.has(cacheKey)) {
-    visibleProducts = companyProductsCache.get(cacheKey);
-    return;
-  }
-
-  setProductsLoadingState("جاري تحميل منتجات الشركة...");
-
-  try {
-    const productsQuery = query(
-      collection(db, "products"),
-      where("companyId", "==", companyId),
-      orderBy("createdAt", "desc")
-    );
-
-    const snapshot = await getDocs(productsQuery);
-
-    const companyProducts = snapshot.docs.map(docSnap => ({
-      id: docSnap.id,
-      ...docSnap.data()
-    }));
-
-    companyProductsCache.set(cacheKey, companyProducts);
-    visibleProducts = companyProducts;
-  } catch (error) {
-    console.error(error);
-    productsGrid.innerHTML = `<div class="empty-message">حدث خطأ أثناء تحميل المنتجات</div>`;
-    visibleProducts = [];
-  } finally {
-    clearProductsLoadingState();
-  }
-}
-
-async function setActiveCompany(companyId) {
-  activeCompanyId = companyId;
-  renderFilters();
-  renderProducts();
-
-  if (activeCompanyId === "all") {
-    await loadAllProducts();
-  } else {
-    await loadProductsByCompany(activeCompanyId);
-  }
-
-  renderProducts();
+  });
 }
 
 async function loadCompanies() {
@@ -283,8 +222,47 @@ async function loadCompanies() {
   }
 }
 
+async function loadAllProducts() {
+  setProductsLoadingState("جاري تحميل جميع المنتجات...");
+
+  try {
+    const productsQuery = query(
+      collection(db, "products"),
+      orderBy("createdAt", "desc")
+    );
+
+    const snapshot = await getDocs(productsQuery);
+
+    allProducts = snapshot.docs.map(docSnap => ({
+      id: docSnap.id,
+      ...docSnap.data()
+    }));
+
+    visibleProducts = allProducts;
+  } catch (error) {
+    console.error(error);
+    allProducts = [];
+    visibleProducts = [];
+    productsGrid.innerHTML = `<div class="empty-message">حدث خطأ أثناء تحميل المنتجات</div>`;
+  } finally {
+    clearProductsLoadingState();
+  }
+}
+
+async function setActiveCompany(companyId) {
+  activeCompanyId = companyId;
+  renderFilters();
+
+  if (activeCompanyId === "all") {
+    visibleProducts = allProducts;
+  } else {
+    visibleProducts = getProductsForCompany(activeCompanyId);
+  }
+
+  renderProducts();
+}
+
 function rerenderProductsForAuthChange() {
-  if (!visibleProducts.length && !isLoadingProducts) return;
   renderProducts();
 }
 
@@ -295,6 +273,7 @@ async function init() {
   });
 
   await loadCompanies();
+  await loadAllProducts();
   await setActiveCompany("all");
 }
 
