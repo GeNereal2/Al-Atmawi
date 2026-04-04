@@ -138,6 +138,7 @@ ul {
   width: 100%;
 }
 
+/* ===== الهيدر ثابت فوق دائمًا ===== */
 .topbar {
   position: fixed;
   top: 0;
@@ -297,6 +298,16 @@ ul {
   color: var(--white);
 }
 
+.hero-badge {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  margin-bottom: 20px;
+  font-size: 0.95rem;
+}
+
 .hero h1 {
   font-size: clamp(2rem, 5vw, 4.4rem);
   line-height: 1.25;
@@ -329,6 +340,7 @@ ul {
 }
 
 .cards-grid {
+  display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 320px));
   justify-content: center;
   gap: 24px;
@@ -399,7 +411,6 @@ ul {
   display: flex;
   flex-direction: column;
   height: 100%;
-  will-change: transform;
 }
 
 .card:hover,
@@ -408,6 +419,7 @@ ul {
   box-shadow: 0 18px 38px rgba(78, 47, 36, 0.16);
 }
 
+/* COMPANY LOGOS */
 .card-image {
   width: 100%;
   aspect-ratio: 1 / 1;
@@ -429,6 +441,7 @@ ul {
   transition: transform 0.35s ease;
 }
 
+/* PRODUCT IMAGES */
 .product-card {
   min-height: 100%;
 }
@@ -479,7 +492,6 @@ ul {
   color: var(--muted);
   font-size: 0.9rem;
   margin-bottom: 10px;
-  word-break: break-word;
 }
 
 .card-actions,
@@ -565,6 +577,7 @@ footer {
   text-align: center;
 }
 
+/* ===== صفحة الأدمن ===== */
 .admin-page-body {
   min-height: 100vh;
   padding-top: 110px;
@@ -590,6 +603,13 @@ footer {
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 24px;
+}
+
+.admin-top-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 .panel-head {
@@ -764,10 +784,6 @@ footer {
   background: #fffdfc;
 }
 
-.loading-message {
-  position: relative;
-}
-
 .success-message,
 .error-message {
   margin-top: 14px;
@@ -855,6 +871,7 @@ footer {
     padding-top: 110px;
   }
 
+  /* الموقع الرئيسي */
   .navbar {
     flex-direction: column;
     justify-content: center;
@@ -872,6 +889,7 @@ footer {
     font-size: 0.95rem;
   }
 
+  /* صفحة الأدمن فقط */
   .admin-page-body .navbar {
     flex-direction: row;
     justify-content: space-between;
@@ -993,10 +1011,67 @@ footer {
     font-size: 0.82rem;
     padding: 7px 9px;
   }
-  .admin-top-actions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  align-items: center;
-}
+
+  /* ===== تصغير كروت المنتجات ===== */
+  .products-grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 18px;
+  }
+
+  .product-card {
+    border-radius: 20px;
+    overflow: hidden;
+  }
+
+  .product-image {
+    width: 100%;
+    height: 160px;
+    background: #fff;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid rgba(78, 47, 36, 0.06);
+    padding: 10px;
+  }
+
+  .product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+  }
+
+  .product-content {
+    padding: 16px 14px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  .product-content h4 {
+    color: var(--choco-dark);
+    margin-bottom: 6px;
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  .product-content p {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 0;
+  }
+
+  .brand-badge {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    padding: 5px 10px;
+    background: #fff4e9;
+    color: var(--choco);
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+  }
 }
