@@ -64,7 +64,7 @@ function getCompanyById(companyId) {
 
 function setProductsLoadingState(message = "جاري تحميل المنتجات...") {
   isLoadingProducts = true;
-  productsGrid.innerHTML = `<div class="empty-message loading-message">${escapeHtml(message)}</div>`;
+  productsGrid.innerHTML = `<div class="empty-message">${escapeHtml(message)}</div>`;
 }
 
 function clearProductsLoadingState() {
@@ -100,7 +100,7 @@ function renderBrands() {
 
   document.querySelectorAll(".browse-company-btn").forEach(button => {
     button.addEventListener("click", async () => {
-      await setActiveCompany(button.dataset.companyId, true);
+      await setActiveCompany(button.dataset.companyId);
       document.getElementById("products").scrollIntoView({ behavior: "smooth" });
     });
   });
@@ -123,7 +123,7 @@ function renderFilters() {
 
   document.querySelectorAll(".filter-btn").forEach(button => {
     button.addEventListener("click", async () => {
-      await setActiveCompany(button.dataset.companyId, false);
+      await setActiveCompany(button.dataset.companyId);
     });
   });
 }
@@ -259,15 +259,6 @@ async function setActiveCompany(companyId) {
   renderProducts();
 }
 
-function validateActiveCompany() {
-  if (
-    activeCompanyId !== "all" &&
-    !companies.some(company => String(company.id) === String(activeCompanyId))
-  ) {
-    activeCompanyId = "all";
-  }
-}
-
 async function loadCompanies() {
   brandsGrid.innerHTML = `<div class="empty-message">جاري تحميل الشركات...</div>`;
 
@@ -284,7 +275,6 @@ async function loadCompanies() {
       ...docSnap.data()
     }));
 
-    validateActiveCompany();
     renderBrands();
     renderFilters();
   } catch (error) {
