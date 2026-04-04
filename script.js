@@ -177,25 +177,7 @@ function renderProducts() {
 }
 
 function getProductsForCompany(companyId) {
-  const selectedCompany = getCompanyById(companyId);
-  if (!selectedCompany) return [];
-
-  const selectedCompanyId = normalizeText(selectedCompany.id);
-  const selectedCompanyName = normalizeText(selectedCompany.name);
-
-  return allProducts.filter(product => {
-    const productCompanyId = normalizeText(product.companyId);
-    const productCompanyName = normalizeText(product.companyName);
-    const productBrand = normalizeText(product.brand);
-    const productCategory = normalizeText(product.category);
-
-    return (
-      productCompanyId === selectedCompanyId ||
-      productCompanyName === selectedCompanyName ||
-      productBrand === selectedCompanyName ||
-      productCategory === selectedCompanyName
-    );
-  });
+  return allProducts.filter(product => String(product.companyId) === String(companyId));
 }
 
 async function loadCompanies() {
