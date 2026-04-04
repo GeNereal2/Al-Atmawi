@@ -69,7 +69,6 @@ let companies = [];
 let products = [];
 let unsubscribeCompanies = null;
 let unsubscribeProducts = null;
-let renderFrame = null;
 
 /* Auth */
 const loginBox = document.getElementById("loginBox");
@@ -142,13 +141,35 @@ function stopListeners() {
   }
 }
 
-function scheduleRenderDashboardData() {
-  if (renderFrame) cancelAnimationFrame(renderFrame);
+function downloadJsonFile(filename, data) {
+  const blob = new Blob(
+    [JSON.stringify(data, null, 2)],
+    { type: "application/json;charset=utf-8" }
+  );
 
-  renderFrame = requestAnimationFrame(() => {
-    renderDashboardData();
-    renderFrame = null;
-  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function exportAllData() {
+  if (!isOwner(auth.currentUser)) {
+    alert("فقط الأدمن الرئيسي يستطيع تصدير البيانات");
+    return;
+  }
+
+  const exportPayload = {
+    exportedAt: new Date().toISOString(),
+    companies,
+    products
+  };
+
+  downloadJsonFile("al-atmawi-backup.json", exportPayload);
 }
 
 /* =========================
@@ -174,11 +195,11 @@ function loadImage(src) {
 
 async function compressImageFile(file, options = {}) {
   const {
-    maxWidth = 1200,
-    maxHeight = 1200,
-    quality = 0.78,
+    maxWidth = 1400,
+    maxHeight = 1400,
+    quality = 0.82,
     outputType = "image/jpeg",
-    maxBase64Length = 550000
+    maxBase64Length = 850000
   } = options;
 
   const originalDataUrl = await readFileAsDataURL(file);
@@ -205,7 +226,7 @@ async function compressImageFile(file, options = {}) {
   let result = canvas.toDataURL(outputType, currentQuality);
 
   while (result.length > maxBase64Length && currentQuality > 0.45) {
-    currentQuality -= 0.06;
+    currentQuality -= 0.07;
     result = canvas.toDataURL(outputType, currentQuality);
   }
 
@@ -213,9 +234,9 @@ async function compressImageFile(file, options = {}) {
     let scaledWidth = width;
     let scaledHeight = height;
 
-    while (result.length > maxBase64Length && scaledWidth > 420 && scaledHeight > 420) {
-      scaledWidth = Math.round(scaledWidth * 0.88);
-      scaledHeight = Math.round(scaledHeight * 0.88);
+    while (result.length > maxBase64Length && scaledWidth > 500 && scaledHeight > 500) {
+      scaledWidth = Math.round(scaledWidth * 0.9);
+      scaledHeight = Math.round(scaledHeight * 0.9);
 
       canvas = document.createElement("canvas");
       ctx = canvas.getContext("2d");
@@ -259,11 +280,11 @@ async function handleImageSelection(fileInput, hiddenInput, previewElement) {
     previewElement.classList.add("hidden");
 
     const compressedDataUrl = await compressImageFile(file, {
-      maxWidth: 1200,
-      maxHeight: 1200,
-      quality: 0.78,
+      maxWidth: 1400,
+      maxHeight: 1400,
+      quality: 0.82,
       outputType: "image/jpeg",
-      maxBase64Length: 550000
+      maxBase64Length: 850000
     });
 
     hiddenInput.value = compressedDataUrl;
@@ -349,38 +370,22 @@ function renderCompanyOptions() {
   `;
 }
 
-function buildProductCountMap() {
-  const countMap = new Map();
-
-  for (const product of products) {
-    const key = String(product.companyId);
-    countMap.set(key, (countMap.get(key) || 0) + 1);
-  }
-
-  return countMap;
-}
-
 function renderCompaniesList() {
   if (!companies.length) {
     adminCompaniesList.innerHTML = `<div class="empty-message">لا توجد شركات حاليًا</div>`;
     return;
   }
 
-  const productCountMap = buildProductCountMap();
-
   adminCompaniesList.innerHTML = companies.map(company => {
-    const companyProductsCount = productCountMap.get(String(company.id)) || 0;
+    const companyProductsCount = products.filter(
+      product => String(product.companyId) === String(company.id)
+    ).length;
 
     return `
       <div class="admin-item">
         <div class="admin-item-top">
           <div class="admin-item-image">
-            <img
-              src="${escapeHtml(company.image)}"
-              alt="${escapeHtml(company.name)}"
-              loading="lazy"
-              decoding="async"
-            >
+            <img src="${escapeHtml(company.image)}" alt="${escapeHtml(company.name)}">
           </div>
           <div>
             <h4>${escapeHtml(company.name)}</h4>
@@ -415,21 +420,14 @@ function renderProductsList() {
     return;
   }
 
-  const companyMap = new Map(companies.map(company => [String(company.id), company]));
-
   adminProductsList.innerHTML = products.map(product => {
-    const company = companyMap.get(String(product.companyId));
+    const company = companies.find(item => String(item.id) === String(product.companyId));
 
     return `
       <div class="admin-item">
         <div class="admin-item-top">
           <div class="admin-item-image">
-            <img
-              src="${escapeHtml(product.image)}"
-              alt="${escapeHtml(product.name)}"
-              loading="lazy"
-              decoding="async"
-            >
+            <img src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)}">
           </div>
           <div>
             <h4>${escapeHtml(product.name)}</h4>
@@ -761,7 +759,7 @@ function listenToCompanies() {
       id: docSnap.id,
       ...docSnap.data()
     }));
-    scheduleRenderDashboardData();
+    renderDashboardData();
   });
 }
 
@@ -773,7 +771,7 @@ function listenToProducts() {
       id: docSnap.id,
       ...docSnap.data()
     }));
-    scheduleRenderDashboardData();
+    renderDashboardData();
   });
 }
 
@@ -795,35 +793,4 @@ onAuthStateChanged(auth, async (user) => {
   updateAdminUI(user);
   listenToCompanies();
   listenToProducts();
-
-  function downloadJsonFile(filename, data) {
-  const blob = new Blob(
-    [JSON.stringify(data, null, 2)],
-    { type: "application/json;charset=utf-8" }
-  );
-
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
-function exportAllData() {
-  if (!isOwner(auth.currentUser)) {
-    alert("فقط الأدمن الرئيسي يستطيع تصدير البيانات");
-    return;
-  }
-
-  const exportPayload = {
-    exportedAt: new Date().toISOString(),
-    companies,
-    products
-  };
-
-  downloadJsonFile("al-atmawi-backup.json", exportPayload);
-}
 });
