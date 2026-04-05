@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Tajawal:wght@400;500;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Tajawal:wght@400;500;700;800&display=swap&font-display=swap');
 
 :root {
   --choco: #4e2f24;
@@ -1314,4 +1314,91 @@ footer {
     padding: 11px 16px;
     font-size: 0.88rem;
   }
+}
+
+/* ===== Font display swap ===== */
+@font-face {
+  font-display: swap;
+}
+
+/* ===== Skeleton Loading ===== */
+@keyframes shimmer {
+  0% { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+}
+
+.skeleton-card {
+  pointer-events: none;
+}
+
+.skeleton-image,
+.skeleton-product-image,
+.skeleton-line {
+  background: linear-gradient(90deg, #f0ebe7 25%, #e8e2dd 50%, #f0ebe7 75%);
+  background-size: 600px 100%;
+  animation: shimmer 1.4s infinite linear;
+  border-radius: 12px;
+}
+
+.skeleton-image {
+  width: 100%;
+  aspect-ratio: 1/1;
+  border-radius: 0;
+}
+
+.skeleton-product-image {
+  width: 100%;
+  height: 180px;
+  border-radius: 0;
+}
+
+.skeleton-body {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skeleton-badge {
+  width: 60px;
+  height: 22px;
+  border-radius: 999px;
+}
+
+.skeleton-title {
+  width: 75%;
+  height: 18px;
+}
+
+.skeleton-desc {
+  width: 55%;
+  height: 14px;
+}
+
+.skeleton-btn {
+  width: 100%;
+  height: 42px;
+  border-radius: 999px;
+  margin-top: 8px;
+}
+
+/* ===== Brand Button (أصغر وأرق) ===== */
+.btn-brand {
+  background: transparent;
+  color: var(--choco);
+  border: 1.5px solid rgba(78, 47, 36, 0.25);
+  padding: 9px 20px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  border-radius: 999px;
+  transition: var(--transition);
+  width: 100%;
+}
+
+.btn-brand:hover {
+  background: linear-gradient(135deg, var(--choco), var(--choco-mid));
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 6px 20px rgba(78,47,36,0.2);
+  transform: translateY(-2px);
 }
