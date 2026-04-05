@@ -42,7 +42,7 @@ const auth = getAuth(app);
 ========================= */
 const OWNER_ADMIN = "alimohey586@gmail.com";
 const VIEWER_ADMIN = "private@gmail.com";
-const ADMIN_PRODUCTS_PAGE_SIZE = 12;
+const ADMIN_PRODUCTS_PAGE_SIZE = 6;
 
 function getUserRole(user) {
   if (!user || !user.email) return null;
@@ -479,7 +479,7 @@ function renderProductsList() {
         <div class="admin-item">
           <div class="admin-item-top">
             <div class="admin-item-image">
-              <img src="${escapeHtml(product.image || "")}" alt="${escapeHtml(product.name)}">
+              <img src="${escapeHtml(product.image || "")}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async">
             </div>
             <div>
               <h4>${escapeHtml(product.name)}</h4>
@@ -529,6 +529,7 @@ function attachAdminProductsToolbarEvents() {
   const adminProductsCompanyFilter = document.getElementById("adminProductsCompanyFilter");
   if (adminProductsCompanyFilter) {
     adminProductsCompanyFilter.addEventListener("change", async (e) => {
+      if (adminProductsLoading) return;
       currentProductsFilterCompanyId = e.target.value;
       await loadInitialAdminProducts(currentProductsFilterCompanyId);
       renderCompaniesList();
