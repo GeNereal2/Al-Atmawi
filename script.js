@@ -71,13 +71,19 @@ function sortProductsByCreatedAt(items) {
   });
 }
 
+const BRANDS_PAGE_SIZE = 6;
+let visibleBrandsCount = BRANDS_PAGE_SIZE;
+
 function renderBrands() {
   if (!companies.length) {
     brandsGrid.innerHTML = `<div class="empty-message">لا توجد شركات حاليًا</div>`;
     return;
   }
 
-  brandsGrid.innerHTML = companies.map(company => `
+  const visibleCompanies = companies.slice(0, visibleBrandsCount);
+  const hasMore = visibleBrandsCount < companies.length;
+
+  brandsGrid.innerHTML = visibleCompanies.map(company => `
     <div class="card">
       <div class="card-image">
         <img
@@ -97,6 +103,18 @@ function renderBrands() {
       </div>
     </div>
   `).join("");
+
+  if (hasMore) {
+    brandsGrid.innerHTML += `
+      <div class="load-more-wrap" style="grid-column:1/-1">
+        <button id="loadMoreBrandsBtn" class="btn btn-outline" type="button">عرض المزيد</button>
+      </div>
+    `;
+    document.getElementById("loadMoreBrandsBtn").addEventListener("click", () => {
+      visibleBrandsCount += BRANDS_PAGE_SIZE;
+      renderBrands();
+    });
+  }
 
   document.querySelectorAll(".browse-company-btn").forEach(button => {
     button.addEventListener("click", async () => {
