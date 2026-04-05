@@ -404,27 +404,31 @@ function buildAdminProductsToolbar() {
   `;
 }
 
+const ADMIN_COMPANIES_PAGE_SIZE = 6;
+let visibleCompaniesCount = ADMIN_COMPANIES_PAGE_SIZE;
+
 function renderCompaniesList() {
   if (!companies.length) {
     adminCompaniesList.innerHTML = `<div class="empty-message">لا توجد شركات حاليًا</div>`;
     return;
   }
 
-  adminCompaniesList.innerHTML = companies.map(company => {
-    const companyProductsCount = companyProductsCounts[String(company.id)] || 0;
+  const visibleCompanies = companies.slice(0, visibleCompaniesCount);
+  const hasMore = visibleCompaniesCount < companies.length;
 
+  adminCompaniesList.innerHTML = visibleCompanies.map(company => {
+    const companyProductsCount = companyProductsCounts[String(company.id)] || 0;
     return `
       <div class="admin-item">
         <div class="admin-item-top">
           <div class="admin-item-image">
-            <img src="${escapeHtml(company.image || "")}" alt="${escapeHtml(company.name)}">
+            <img src="${escapeHtml(company.image || "")}" alt="${escapeHtml(company.name)}" loading="lazy" decoding="async">
           </div>
           <div>
             <h4>${escapeHtml(company.name)}</h4>
             <div class="admin-item-meta">عدد المنتجات: ${companyProductsCount}</div>
           </div>
         </div>
-
         ${isOwner(auth.currentUser) ? `
           <div class="admin-item-actions">
             <button class="action-btn edit-btn" data-company-edit="${company.id}">تعديل</button>
@@ -435,11 +439,22 @@ function renderCompaniesList() {
     `;
   }).join("");
 
+  if (hasMore) {
+    adminCompaniesList.innerHTML += `
+      <div class="load-more-wrap">
+        <button id="adminLoadMoreCompaniesBtn" class="btn btn-outline" type="button">عرض المزيد</button>
+      </div>
+    `;
+    document.getElementById("adminLoadMoreCompaniesBtn").addEventListener("click", () => {
+      visibleCompaniesCount += ADMIN_COMPANIES_PAGE_SIZE;
+      renderCompaniesList();
+    });
+  }
+
   if (isOwner(auth.currentUser)) {
     document.querySelectorAll("[data-company-edit]").forEach(btn => {
       btn.addEventListener("click", () => startEditCompany(btn.dataset.companyEdit));
     });
-
     document.querySelectorAll("[data-company-delete]").forEach(btn => {
       btn.addEventListener("click", () => deleteCompany(btn.dataset.companyDelete));
     });
