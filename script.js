@@ -31,6 +31,7 @@ const auth = getAuth(app);
 const OWNER_ADMIN = "alimohey586@gmail.com";
 const VIEWER_ADMIN = "private@gmail.com";
 const PRODUCTS_PAGE_SIZE = 12;
+const BRANDS_PAGE_SIZE = 6;
 
 let currentUser = null;
 let activeCompanyId = "";
@@ -40,6 +41,7 @@ let isLoadingProducts = false;
 let hasMoreProducts = false;
 let currentCompanyProductsDocs = [];
 let currentCompanyCursor = 0;
+let visibleBrandsCount = BRANDS_PAGE_SIZE;
 
 const brandsGrid = document.getElementById("brandsGrid");
 const filtersBar = document.getElementById("filtersBar");
@@ -71,9 +73,50 @@ function sortProductsByCreatedAt(items) {
   });
 }
 
-const BRANDS_PAGE_SIZE = 6;
-let visibleBrandsCount = BRANDS_PAGE_SIZE;
+/* ===== Skeleton Loaders ===== */
+function getBrandSkeletons(count = 6) {
+  return Array.from({ length: count }, () => `
+    <div class="card skeleton-card">
+      <div class="skeleton-image"></div>
+      <div class="skeleton-body">
+        <div class="skeleton-line skeleton-title"></div>
+        <div class="skeleton-line skeleton-btn"></div>
+      </div>
+    </div>
+  `).join("");
+}
 
+function getProductSkeletons(count = 8) {
+  return Array.from({ length: count }, () => `
+    <div class="product-card skeleton-card">
+      <div class="skeleton-product-image"></div>
+      <div class="skeleton-body">
+        <div class="skeleton-line skeleton-badge"></div>
+        <div class="skeleton-line skeleton-title"></div>
+        <div class="skeleton-line skeleton-desc"></div>
+      </div>
+    </div>
+  `).join("");
+}
+
+/* ===== Animate cards on appear ===== */
+function animateCards(selector) {
+  const cards = document.querySelectorAll(selector);
+  cards.forEach((card, i) => {
+    card.style.opacity = "0";
+    card.style.transform = "translateY(20px)";
+    card.style.transition = "opacity 0.4s ease, transform 0.4s ease";
+    card.style.transitionDelay = `${i * 60}ms`;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        card.style.opacity = "1";
+        card.style.transform = "translateY(0)";
+      });
+    });
+  });
+}
+
+/* ===== Render Brands ===== */
 function renderBrands() {
   if (!companies.length) {
     brandsGrid.innerHTML = `<div class="empty-message">لا توجد شركات حاليًا</div>`;
@@ -96,8 +139,8 @@ function renderBrands() {
       <div class="card-body">
         <h3>${escapeHtml(company.name)}</h3>
         <div class="card-actions">
-          <button class="btn btn-primary browse-company-btn" data-company-id="${company.id}">
-            تصفح منتجات الشركة
+          <button class="btn btn-brand browse-company-btn" data-company-id="${company.id}">
+            تصفح المنتجات
           </button>
         </div>
       </div>
@@ -115,6 +158,8 @@ function renderBrands() {
       renderBrands();
     });
   }
+
+  animateCards(".card:not(.skeleton-card)");
 
   document.querySelectorAll(".browse-company-btn").forEach(button => {
     button.addEventListener("click", async () => {
@@ -149,7 +194,6 @@ function renderFilters() {
 
 function getLoadMoreButtonHtml() {
   if (!visibleProducts.length || !hasMoreProducts) return "";
-
   return `
     <div class="load-more-wrap">
       <button id="loadMoreBtn" class="btn btn-outline" type="button" ${isLoadingProducts ? "disabled" : ""}>
@@ -179,7 +223,7 @@ function renderProducts() {
   }
 
   if (!visibleProducts.length && isLoadingProducts) {
-    productsGrid.innerHTML = `<div class="empty-message">جاري تحميل المنتجات...</div>`;
+    productsGrid.innerHTML = getProductSkeletons(8);
     return;
   }
 
@@ -193,7 +237,6 @@ function renderProducts() {
   productsGrid.innerHTML = `
     ${visibleProducts.map(product => {
       const company = getCompanyById(product.companyId);
-
       return `
         <div class="product-card">
           <div class="product-image">
@@ -215,6 +258,8 @@ function renderProducts() {
     ${getLoadMoreButtonHtml()}
   `;
 
+  animateCards(".product-card:not(.skeleton-card)");
+
   const loadMoreBtn = document.getElementById("loadMoreBtn");
   if (loadMoreBtn) {
     loadMoreBtn.addEventListener("click", loadMoreProducts);
@@ -222,7 +267,7 @@ function renderProducts() {
 }
 
 async function loadCompanies() {
-  brandsGrid.innerHTML = `<div class="empty-message">جاري تحميل الشركات...</div>`;
+  brandsGrid.innerHTML = getBrandSkeletons(6);
 
   try {
     const snapshot = await getDocs(collection(db, "companies"));
