@@ -154,6 +154,21 @@
 
 
 
-  <script type="module" src="script.js?v=5"></script>
+  <!-- Modal -->
+  <div class="modal-overlay" id="productModal">
+    <div class="modal-box">
+      <button class="modal-close" id="modalCloseBtn" type="button">✕</button>
+      <div class="modal-image-wrap">
+        <img id="modalImg" src="" alt="" />
+      </div>
+      <div class="modal-info">
+        <div id="modalBadge" class="modal-badge"></div>
+        <h3 id="modalName"></h3>
+        <p id="modalDesc" style="display:none"></p>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="script.js?v=6"></script>
 </body>
 </html>
