@@ -43,6 +43,42 @@ let currentCompanyProductsDocs = [];
 let currentCompanyCursor = 0;
 let visibleBrandsCount = BRANDS_PAGE_SIZE;
 
+/* ===== Modal ===== */
+const productModal = document.getElementById("productModal");
+const modalImg = document.getElementById("modalImg");
+const modalName = document.getElementById("modalName");
+const modalDesc = document.getElementById("modalDesc");
+const modalBadge = document.getElementById("modalBadge");
+const modalCloseBtn = document.getElementById("modalCloseBtn");
+
+function openModal(product, company) {
+  modalImg.src = product.image || "";
+  modalImg.alt = product.name || "";
+  modalName.textContent = product.name || "";
+  modalBadge.textContent = company ? company.name : "";
+  if (product.desc && canSeePrices(currentUser)) {
+    modalDesc.textContent = product.desc;
+    modalDesc.style.display = "block";
+  } else {
+    modalDesc.style.display = "none";
+  }
+  productModal.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function closeModal() {
+  productModal.classList.remove("active");
+  document.body.style.overflow = "";
+}
+
+modalCloseBtn.addEventListener("click", closeModal);
+productModal.addEventListener("click", (e) => {
+  if (e.target === productModal) closeModal();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeModal();
+});
+
 const brandsGrid = document.getElementById("brandsGrid");
 const filtersBar = document.getElementById("filtersBar");
 const productsGrid = document.getElementById("productsGrid");
@@ -238,7 +274,7 @@ function renderProducts() {
     ${visibleProducts.map(product => {
       const company = getCompanyById(product.companyId);
       return `
-        <div class="product-card">
+        <div class="product-card product-card-clickable" data-product-id="${product.id}">
           <div class="product-image">
             <img
               src="${escapeHtml(product.image || "")}"
@@ -259,6 +295,16 @@ function renderProducts() {
   `;
 
   animateCards(".product-card:not(.skeleton-card)");
+
+  document.querySelectorAll(".product-card-clickable").forEach(card => {
+    card.addEventListener("click", () => {
+      const productId = card.dataset.productId;
+      const product = visibleProducts.find(p => p.id === productId);
+      if (!product) return;
+      const company = getCompanyById(product.companyId);
+      openModal(product, company);
+    });
+  });
 
   const loadMoreBtn = document.getElementById("loadMoreBtn");
   if (loadMoreBtn) {
