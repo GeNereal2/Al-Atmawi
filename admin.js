@@ -6,6 +6,7 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  getDoc,
   query,
   orderBy,
   serverTimestamp,
@@ -182,125 +183,61 @@ function exportAllData() {
 }
 
 /* =========================
-   Image Compression
+   Cloudinary Upload
 ========================= */
-function readFileAsDataURL(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error("فشل في قراءة الصورة"));
-    reader.readAsDataURL(file);
+const CLOUDINARY_CLOUD_NAME = "dooabdkr5";
+const CLOUDINARY_UPLOAD_PRESET = "Al-Atmawi";
+const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
+
+async function uploadToCloudinary(file) {
+  const allowedTypes = ["image/jpeg","image/jpg","image/png","image/webp"];
+  if (!allowedTypes.includes(file.type)) {
+    throw new Error("صيغة الصورة غير مدعومة. استخدم JPG أو PNG أو WEBP");
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+  formData.append("folder", "al-atmawi");
+
+  const response = await fetch(CLOUDINARY_UPLOAD_URL, {
+    method: "POST",
+    body: formData
   });
-}
 
-function loadImage(src) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error("فشل في تحميل الصورة"));
-    img.src = src;
-  });
-}
-
-async function compressImageFile(file, options = {}) {
-  const {
-    maxWidth = 1400,
-    maxHeight = 1400,
-    quality = 0.82,
-    outputType = "image/jpeg",
-    maxBase64Length = 850000
-  } = options;
-
-  const originalDataUrl = await readFileAsDataURL(file);
-  const img = await loadImage(originalDataUrl);
-
-  let width = img.width;
-  let height = img.height;
-
-  const ratio = Math.min(maxWidth / width, maxHeight / height, 1);
-  width = Math.round(width * ratio);
-  height = Math.round(height * ratio);
-
-  let canvas = document.createElement("canvas");
-  let ctx = canvas.getContext("2d");
-
-  canvas.width = width;
-  canvas.height = height;
-
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, width, height);
-  ctx.drawImage(img, 0, 0, width, height);
-
-  let currentQuality = quality;
-  let result = canvas.toDataURL(outputType, currentQuality);
-
-  while (result.length > maxBase64Length && currentQuality > 0.45) {
-    currentQuality -= 0.07;
-    result = canvas.toDataURL(outputType, currentQuality);
+  if (!response.ok) {
+    throw new Error("فشل رفع الصورة. تحقق من إعدادات Cloudinary.");
   }
 
-  if (result.length > maxBase64Length) {
-    let scaledWidth = width;
-    let scaledHeight = height;
-
-    while (result.length > maxBase64Length && scaledWidth > 500 && scaledHeight > 500) {
-      scaledWidth = Math.round(scaledWidth * 0.9);
-      scaledHeight = Math.round(scaledHeight * 0.9);
-
-      canvas = document.createElement("canvas");
-      ctx = canvas.getContext("2d");
-      canvas.width = scaledWidth;
-      canvas.height = scaledHeight;
-
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, scaledWidth, scaledHeight);
-      ctx.drawImage(img, 0, 0, scaledWidth, scaledHeight);
-
-      result = canvas.toDataURL(outputType, currentQuality);
-    }
-  }
-
-  if (result.length > maxBase64Length) {
-    throw new Error("الصورة كبيرة جدًا حتى بعد الضغط. اختر صورة بحجم أقل.");
-  }
-
-  return result;
+  const data = await response.json();
+  return data.secure_url;
 }
 
 async function handleImageSelection(fileInput, hiddenInput, previewElement) {
   const file = fileInput.files[0];
   if (!file) return;
 
-  const allowedTypes = [
-    "image/jpeg",
-    "image/jpg",
-    "image/png",
-    "image/webp"
-  ];
-
-  if (!allowedTypes.includes(file.type)) {
-    alert("صيغة الصورة غير مدعومة. استخدم JPG أو PNG أو WEBP");
-    fileInput.value = "";
-    return;
-  }
-
   try {
     previewElement.src = "";
     previewElement.classList.add("hidden");
+    hiddenInput.value = "";
 
-    const compressedDataUrl = await compressImageFile(file, {
-      maxWidth: 1400,
-      maxHeight: 1400,
-      quality: 0.82,
-      outputType: "image/jpeg",
-      maxBase64Length: 850000
-    });
+    // إظهار حالة التحميل
+    const label = fileInput.closest(".form-group")?.querySelector("label");
+    const originalLabel = label?.textContent || "";
+    if (label) label.textContent = "⏳ جاري رفع الصورة...";
 
-    hiddenInput.value = compressedDataUrl;
-    previewElement.src = compressedDataUrl;
+    const imageUrl = await uploadToCloudinary(file);
+
+    hiddenInput.value = imageUrl;
+    previewElement.src = imageUrl;
     previewElement.classList.remove("hidden");
+
+    if (label) label.textContent = "✅ تم رفع الصورة";
+    setTimeout(() => { if (label) label.textContent = originalLabel; }, 3000);
+
   } catch (error) {
-    alert(error.message || "حدث خطأ أثناء تجهيز الصورة");
+    alert(error.message || "حدث خطأ أثناء رفع الصورة");
     fileInput.value = "";
     hiddenInput.value = "";
     previewElement.src = "";
@@ -577,26 +514,40 @@ function updateAdminUI(user) {
 /* =========================
    Edit Actions
 ========================= */
-function startEditCompany(companyId) {
+async function startEditCompany(companyId) {
   if (!isOwner(auth.currentUser)) return;
 
   const company = companies.find(item => String(item.id) === String(companyId));
   if (!company) return;
 
-  companyIdInput.value = company.id;
-  companyNameInput.value = company.name;
-  companyImageInput.value = String(company.image || "").startsWith("data:") ? "" : (company.image || "");
-  companyImageDataInput.value = String(company.image || "").startsWith("data:") ? company.image : "";
-  companyPreview.src = company.image || "";
-  companyPreview.classList.remove("hidden");
-
-  companyFormTitle.textContent = "تعديل الشركة";
-  companySubmitBtn.textContent = "حفظ تعديل الشركة";
+  companyFormTitle.textContent = "جاري التحميل...";
+  companySubmitBtn.textContent = "جاري التحميل...";
   cancelCompanyEditBtn.classList.remove("hidden");
-  companyForm.scrollIntoView({ behavior: "smooth", block: "center" });
+
+  try {
+    // نجيب البيانات الكاملة مع الصورة بس عند التعديل
+    const docSnap = await getDoc(doc(db, "companies", companyId));
+    const fullData = docSnap.exists() ? docSnap.data() : {};
+    const image = fullData.image || "";
+
+    companyIdInput.value = company.id;
+    companyNameInput.value = company.name;
+    companyImageInput.value = String(image).startsWith("data:") ? "" : image;
+    companyImageDataInput.value = String(image).startsWith("data:") ? image : "";
+    companyPreview.src = image;
+    if (image) companyPreview.classList.remove("hidden");
+
+    companyFormTitle.textContent = "تعديل الشركة";
+    companySubmitBtn.textContent = "حفظ تعديل الشركة";
+    companyForm.scrollIntoView({ behavior: "smooth", block: "center" });
+  } catch (error) {
+    console.error(error);
+    companyFormTitle.textContent = "إضافة شركة جديدة";
+    companySubmitBtn.textContent = "إضافة الشركة";
+  }
 }
 
-function startEditProduct(productId) {
+async function startEditProduct(productId) {
   if (!isOwner(auth.currentUser)) return;
 
   const product = products.find(item => String(item.id) === String(productId));
@@ -604,19 +555,33 @@ function startEditProduct(productId) {
 
   renderCompanyOptions();
 
-  productIdInput.value = product.id;
-  productCompanyInput.value = product.companyId;
-  productNameInput.value = product.name;
-  productDescInput.value = product.desc;
-  productImageInput.value = String(product.image || "").startsWith("data:") ? "" : (product.image || "");
-  productImageDataInput.value = String(product.image || "").startsWith("data:") ? product.image : "";
-  productPreview.src = product.image || "";
-  productPreview.classList.remove("hidden");
-
-  productFormTitle.textContent = "تعديل المنتج";
-  productSubmitBtn.textContent = "حفظ تعديل المنتج";
+  productFormTitle.textContent = "جاري التحميل...";
+  productSubmitBtn.textContent = "جاري التحميل...";
   cancelProductEditBtn.classList.remove("hidden");
-  productForm.scrollIntoView({ behavior: "smooth", block: "center" });
+
+  try {
+    // نجيب البيانات الكاملة مع الصورة بس عند التعديل
+    const docSnap = await getDoc(doc(db, "products", productId));
+    const fullData = docSnap.exists() ? docSnap.data() : {};
+    const image = fullData.image || "";
+
+    productIdInput.value = product.id;
+    productCompanyInput.value = product.companyId;
+    productNameInput.value = product.name;
+    productDescInput.value = product.desc;
+    productImageInput.value = String(image).startsWith("data:") ? "" : image;
+    productImageDataInput.value = String(image).startsWith("data:") ? image : "";
+    productPreview.src = image;
+    if (image) productPreview.classList.remove("hidden");
+
+    productFormTitle.textContent = "تعديل المنتج";
+    productSubmitBtn.textContent = "حفظ تعديل المنتج";
+    productForm.scrollIntoView({ behavior: "smooth", block: "center" });
+  } catch (error) {
+    console.error(error);
+    productFormTitle.textContent = "إضافة منتج جديد";
+    productSubmitBtn.textContent = "إضافة المنتج";
+  }
 }
 
 /* =========================
@@ -766,6 +731,7 @@ companyForm.addEventListener("submit", async function (e) {
   const id = companyIdInput.value.trim();
   const name = companyNameInput.value.trim();
   const image = companyImageDataInput.value.trim() || companyImageInput.value.trim();
+  // companyImageDataInput الآن يحمل رابط Cloudinary بدل base64
 
   if (!name || !image) {
     showMessage(companyForm, "يرجى تعبئة اسم الشركة والصورة", "error");
@@ -823,6 +789,7 @@ productForm.addEventListener("submit", async function (e) {
   const name = productNameInput.value.trim();
   const desc = productDescInput.value.trim();
   const image = productImageDataInput.value.trim() || productImageInput.value.trim();
+  // productImageDataInput الآن يحمل رابط Cloudinary بدل base64
 
   if (!companyId || !name || !desc || !image) {
     showMessage(productForm, "يرجى تعبئة جميع الحقول مع الصورة", "error");
@@ -879,10 +846,16 @@ async function loadCompaniesOnce() {
 
     const snapshot = await getDocs(companiesQuery);
 
-    companies = snapshot.docs.map(docSnap => ({
-      id: docSnap.id,
-      ...docSnap.data()
-    }));
+    companies = snapshot.docs.map(docSnap => {
+      const d = docSnap.data();
+      return {
+        id: docSnap.id,
+        name: d.name || "",
+        createdAt: d.createdAt || null,
+        // image محذوف من القائمة لتخفيف التحميل - بيتحمل بس عند التعديل
+        _hasImage: !!d.image
+      };
+    });
 
     companies = sortByCreatedAtDesc(companies);
   } catch (error) {
@@ -930,10 +903,18 @@ async function loadInitialAdminProducts(companyId = "") {
     const productsQuery = buildAdminProductsQuery(companyId);
     const snapshot = await getDocs(productsQuery);
 
-    let loadedProducts = snapshot.docs.map(docSnap => ({
-      id: docSnap.id,
-      ...docSnap.data()
-    }));
+    let loadedProducts = snapshot.docs.map(docSnap => {
+      const d = docSnap.data();
+      return {
+        id: docSnap.id,
+        name: d.name || "",
+        companyId: d.companyId || "",
+        desc: d.desc || "",
+        createdAt: d.createdAt || null,
+        // image محذوف من القائمة لتخفيف التحميل
+        _hasImage: !!d.image
+      };
+    });
 
     loadedProducts = sortByCreatedAtDesc(loadedProducts);
 
