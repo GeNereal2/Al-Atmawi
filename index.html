@@ -3,17 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Al-Atmawi Sweets</title>
+  <title>العتماوي للسكاكر والحلويات</title>
+  <meta name="description" content="أجود أنواع الشوكولاتة والسكاكر من أشهر الشركات العالمية" />
+  <meta name="theme-color" content="#2f1b14" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Al-Atmawi" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <header class="topbar">
+  <header class="topbar" id="topbar">
     <div class="container navbar">
       <a href="index.html" class="logo">Al-Atmawi <span>Sweets</span></a>
-
       <nav>
         <ul class="nav-links">
           <li><a href="#home">الرئيسية</a></li>
@@ -31,8 +37,8 @@
   <section class="hero" id="home">
     <div class="container">
       <div class="hero-content">
-        <h1>عالم من <em>الحلويات</em><br>في مكان واحد</h1>
-        <p>نوفر أجود أنواع الشوكولاتة والسكاكر من أشهر الشركات العالمية بجودة عالية ومذاق مميز لا تُنسى.</p>
+        <h1>اكتشف عالم <em>الحلويات</em><br>اللذيذة</h1>
+        <p>نوفر أجود أنواع الشوكولاتة والسكاكر من أشهر الشركات العالمية بجودة عالية ومذاق مميز لا يُنسى.</p>
 
         <div class="hero-buttons">
           <a href="#products" class="btn btn-primary">تصفح المنتجات</a>
@@ -41,16 +47,16 @@
 
         <div class="hero-stats">
           <div class="hero-stat">
-            <strong>+50</strong>
+            <strong data-target="50">0</strong>
             <span>شركة عالمية</span>
           </div>
           <div class="hero-stat">
-            <strong>+500</strong>
+            <strong data-target="500">0</strong>
             <span>منتج متنوع</span>
           </div>
           <div class="hero-stat">
-            <strong>100%</strong>
-            <span>جودة مضمونة</span>
+            <strong data-target="100">0</strong>
+            <span>% جودة مضمونة</span>
           </div>
         </div>
       </div>
@@ -64,10 +70,7 @@
         <h2>الشركات</h2>
         <p>اختر الشركة التي تريد تصفح منتجاتها</p>
       </div>
-
-      <div id="brandsGrid" class="cards-grid">
-        <div class="empty-message">جاري تحميل الشركات...</div>
-      </div>
+      <div id="brandsGrid" class="cards-grid"></div>
     </div>
   </section>
 
@@ -78,11 +81,8 @@
         <h2 id="productsSectionTitle">المنتجات</h2>
         <p id="productsSectionSubtitle">استعرض جميع منتجاتنا أو اختر شركة معينة</p>
       </div>
-
       <div id="filtersBar" class="filters-bar"></div>
-      <div id="productsGrid" class="products-grid">
-        <div class="empty-message">جاري تحميل المنتجات...</div>
-      </div>
+      <div id="productsGrid" class="products-grid"></div>
     </div>
   </section>
 
@@ -92,10 +92,7 @@
       <div class="about-box">
         <div class="about-text">
           <h2>من نحن</h2>
-          <p>
-            في <strong>Al-Atmawi Sweets</strong> نختار لكم بعناية أجود أنواع الشوكولاتة والسكاكر والحلويات من أشهر العلامات العالمية.
-            نؤمن بأن كل قطعة حلوى تحمل لحظة من السعادة، لذا نحرص دائمًا على تقديم جودة عالية وتنوع كبير وخدمة استثنائية تليق بثقتكم.
-          </p>
+          <p>في <strong>Al-Atmawi Sweets</strong> نختار لكم بعناية أجود أنواع الشوكولاتة والسكاكر والحلويات من أشهر العلامات العالمية. نؤمن بأن كل قطعة حلوى تحمل لحظة من السعادة، لذا نحرص دائمًا على تقديم جودة عالية وتنوع كبير وخدمة استثنائية تليق بثقتكم.</p>
         </div>
         <div class="about-features">
           <div class="about-feature">
@@ -108,8 +105,6 @@
             <h4>جودة عالية</h4>
             <p>منتجات مختارة بعناية</p>
           </div>
-
-
         </div>
       </div>
     </div>
@@ -121,20 +116,17 @@
       <div class="contact-box">
         <h2>تواصل معنا</h2>
         <p>للاستفسار أو الطلبات، يمكنك التواصل معنا مباشرة</p>
-
         <div class="contact-grid">
           <div class="contact-card">
             <span class="contact-card-icon">📞</span>
             <h3>الهاتف</h3>
             <p><a href="tel:+970599202276">+970 599 202 276</a></p>
           </div>
-
           <div class="contact-card">
             <span class="contact-card-icon">💬</span>
             <h3>واتساب</h3>
             <p><a href="https://wa.me/970599202276" target="_blank">راسلنا الآن</a></p>
           </div>
-
           <div class="contact-card">
             <span class="contact-card-icon">📘</span>
             <h3>فيسبوك</h3>
@@ -152,8 +144,6 @@
     </div>
   </footer>
 
-
-
   <!-- Modal -->
   <div class="modal-overlay" id="productModal">
     <div class="modal-box">
@@ -169,6 +159,44 @@
     </div>
   </div>
 
-  <script type="module" src="script.js?v=6"></script>
+  <script type="module" src="script.js?v=7"></script>
+  <script>
+    /* Animated Counters */
+    function animateCounter(el, target) {
+      let startTime = null;
+      const duration = 2000;
+      function step(timestamp) {
+        if (!startTime) startTime = timestamp;
+        const progress = Math.min((timestamp - startTime) / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 4);
+        const current = Math.floor(ease * target);
+        el.textContent = (target === 100 ? "" : "+") + current;
+        if (progress < 1) requestAnimationFrame(step);
+        else el.textContent = (target === 100 ? "" : "+") + target;
+      }
+      requestAnimationFrame(step);
+    }
+
+    const counterObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.querySelectorAll("[data-target]").forEach(el => {
+            animateCounter(el, parseInt(el.dataset.target));
+          });
+          counterObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.6 });
+
+    const heroStats = document.querySelector(".hero-stats");
+    if (heroStats) counterObserver.observe(heroStats);
+
+    /* Service Worker */
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./service-worker.js").catch(() => {});
+      });
+    }
+  </script>
 </body>
 </html>
