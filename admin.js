@@ -518,10 +518,19 @@ function attachAdminProductsToolbarEvents() {
   }
 }
 
+function updateCounters() {
+  const counterCompanies = document.getElementById("counterCompanies");
+  const counterProducts  = document.getElementById("counterProducts");
+  const totalProducts    = Object.values(companyProductsCounts).reduce((a,b) => a+b, 0);
+  if (counterCompanies) counterCompanies.textContent = companies.length;
+  if (counterProducts)  counterProducts.textContent  = totalProducts;
+}
+
 function renderDashboardData() {
   renderCompanyOptions();
   renderCompaniesList();
   renderProductsList();
+  updateCounters();
 }
 
 function updateAdminUI(user) {
