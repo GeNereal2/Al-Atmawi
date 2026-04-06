@@ -910,7 +910,6 @@ async function loadCompaniesOnce() {
 
 async function loadCompanyProductsCounts() {
   try {
-    // نجيب بس companyId من كل منتج بدون باقي البيانات الثقيلة
     const snapshot = await getDocs(
       query(collection(db, "products"))
     );
@@ -926,6 +925,9 @@ async function loadCompanyProductsCounts() {
     console.error(error);
     companyProductsCounts = {};
   }
+
+  // تحديث العدادات فور ما تتحمل البيانات
+  updateCounters();
 }
 
 function buildAdminProductsQuery(companyId = "") {
