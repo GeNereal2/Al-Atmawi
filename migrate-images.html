@@ -203,13 +203,24 @@ function updateStats() {
 }
 
 async function uploadBase64ToCloudinary(base64, folder) {
+  // تحويل base64 إلى Blob
+  const arr = base64.split(",");
+  const mime = arr[0].match(/:(.*?);/)[1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) u8arr[n] = bstr.charCodeAt(n);
+  const blob = new Blob([u8arr], { type: mime });
+
   const formData = new FormData();
-  formData.append("file", base64);
+  formData.append("file", blob, "image.jpg");
   formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-  formData.append("folder", `al-atmawi/${folder}`);
 
   const res = await fetch(CLOUDINARY_URL, { method: "POST", body: formData });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.error?.message || `HTTP ${res.status}`);
+  }
   const data = await res.json();
   return data.secure_url;
 }
