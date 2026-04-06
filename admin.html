@@ -163,6 +163,55 @@
     </div>
   </section>
 
-  <script type="module" src="admin.js?v=4"></script>
+  <!-- Confirm Delete Modal -->
+  <div class="modal-overlay" id="confirmModal">
+    <div class="modal-box" style="max-width:420px">
+      <div class="modal-info" style="padding:36px 32px 32px;text-align:center">
+        <div style="font-size:3rem;margin-bottom:16px">🗑️</div>
+        <h3 id="confirmModalTitle" style="margin-bottom:12px;font-size:1.3rem"></h3>
+        <p id="confirmModalMsg" style="display:block;margin-bottom:28px"></p>
+        <div style="display:flex;gap:12px;justify-content:center">
+          <button id="confirmModalCancel" class="btn btn-light" type="button" style="min-width:110px">إلغاء</button>
+          <button id="confirmModalOk" class="btn" type="button" style="min-width:110px;background:var(--danger);color:#fff;border-color:transparent">حذف</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="admin.js?v=5"></script>
+  <script>
+    /* Confirm Modal Helper */
+    window.showConfirmModal = function(title, msg) {
+      return new Promise(resolve => {
+        const overlay  = document.getElementById("confirmModal");
+        const titleEl  = document.getElementById("confirmModalTitle");
+        const msgEl    = document.getElementById("confirmModalMsg");
+        const cancelBtn= document.getElementById("confirmModalCancel");
+        const okBtn    = document.getElementById("confirmModalOk");
+
+        titleEl.textContent = title;
+        msgEl.textContent   = msg;
+        overlay.classList.add("active");
+        document.body.style.overflow = "hidden";
+
+        function close(result) {
+          overlay.classList.remove("active");
+          document.body.style.overflow = "";
+          cancelBtn.removeEventListener("click", onCancel);
+          okBtn.removeEventListener("click", onOk);
+          overlay.removeEventListener("click", onOverlay);
+          resolve(result);
+        }
+
+        function onCancel()  { close(false); }
+        function onOk()      { close(true);  }
+        function onOverlay(e){ if(e.target===overlay) close(false); }
+
+        cancelBtn.addEventListener("click", onCancel);
+        okBtn.addEventListener("click", onOk);
+        overlay.addEventListener("click", onOverlay);
+      });
+    };
+  </script>
 </body>
 </html>
