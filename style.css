@@ -791,3 +791,55 @@ footer {
   .admin-page-body .logo { font-size:1.1rem; }
   .admin-back-btn { padding:8px 12px; font-size:0.82rem; }
 }
+
+/* ===== Admin Counters ===== */
+.admin-counters {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.admin-counter-card {
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: 20px 28px;
+  border: 1px solid rgba(201,151,62,0.15);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  min-width: 160px;
+}
+
+.admin-counter-icon {
+  font-size: 2rem;
+  width: 52px;
+  height: 52px;
+  background: var(--gold-pale);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(201,151,62,0.18);
+  flex-shrink: 0;
+}
+
+.admin-counter-card div {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-counter-card strong {
+  font-family: 'Playfair Display', serif;
+  font-size: 2rem;
+  color: var(--choco-dark);
+  line-height: 1;
+}
+
+.admin-counter-card span {
+  color: var(--muted);
+  font-size: 0.88rem;
+  margin-top: 4px;
+}
