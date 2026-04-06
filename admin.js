@@ -42,7 +42,7 @@ const auth = getAuth(app);
 ========================= */
 const OWNER_ADMIN = "alimohey586@gmail.com";
 const VIEWER_ADMIN = "private@gmail.com";
-const ADMIN_PRODUCTS_PAGE_SIZE = 6;
+const ADMIN_PRODUCTS_PAGE_SIZE = 8;
 
 function getUserRole(user) {
   if (!user || !user.email) return null;
@@ -404,7 +404,7 @@ function buildAdminProductsToolbar() {
   `;
 }
 
-const ADMIN_COMPANIES_PAGE_SIZE = 6;
+const ADMIN_COMPANIES_PAGE_SIZE = 8;
 let visibleCompaniesCount = ADMIN_COMPANIES_PAGE_SIZE;
 
 function renderCompaniesList() {
@@ -419,22 +419,20 @@ function renderCompaniesList() {
   adminCompaniesList.innerHTML = visibleCompanies.map(company => {
     const companyProductsCount = companyProductsCounts[String(company.id)] || 0;
     return `
-      <div class="admin-item">
-        <div class="admin-item-top">
-          <div class="admin-item-image">
-            <img src="${escapeHtml(company.image || "")}" alt="${escapeHtml(company.name)}" loading="lazy" decoding="async">
-          </div>
-          <div>
+      <div class="admin-item admin-item-compact">
+        <div class="admin-item-compact-row">
+          <div class="admin-item-icon">🏢</div>
+          <div class="admin-item-info">
             <h4>${escapeHtml(company.name)}</h4>
             <div class="admin-item-meta">عدد المنتجات: ${companyProductsCount}</div>
           </div>
+          ${isOwner(auth.currentUser) ? `
+            <div class="admin-item-actions-inline">
+              <button class="action-btn edit-btn" data-company-edit="${company.id}">تعديل</button>
+              <button class="action-btn delete-btn" data-company-delete="${company.id}">حذف</button>
+            </div>
+          ` : ""}
         </div>
-        ${isOwner(auth.currentUser) ? `
-          <div class="admin-item-actions">
-            <button class="action-btn edit-btn" data-company-edit="${company.id}">تعديل</button>
-            <button class="action-btn delete-btn" data-company-delete="${company.id}">حذف</button>
-          </div>
-        ` : ""}
       </div>
     `;
   }).join("");
@@ -491,24 +489,20 @@ function renderProductsList() {
       const company = companies.find(item => String(item.id) === String(product.companyId));
 
       return `
-        <div class="admin-item">
-          <div class="admin-item-top">
-            <div class="admin-item-image">
-              <img src="${escapeHtml(product.image || "")}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async">
-            </div>
-            <div>
+        <div class="admin-item admin-item-compact">
+          <div class="admin-item-compact-row">
+            <div class="admin-item-icon">🍫</div>
+            <div class="admin-item-info">
               <h4>${escapeHtml(product.name)}</h4>
               ${company ? `<div class="admin-item-meta">${escapeHtml(company.name)}</div>` : ""}
-              <p>${escapeHtml(product.desc || "")}</p>
             </div>
+            ${isOwner(auth.currentUser) ? `
+              <div class="admin-item-actions-inline">
+                <button class="action-btn edit-btn" data-product-edit="${product.id}">تعديل</button>
+                <button class="action-btn delete-btn" data-product-delete="${product.id}">حذف</button>
+              </div>
+            ` : ""}
           </div>
-
-          ${isOwner(auth.currentUser) ? `
-            <div class="admin-item-actions">
-              <button class="action-btn edit-btn" data-product-edit="${product.id}">تعديل</button>
-              <button class="action-btn delete-btn" data-product-delete="${product.id}">حذف</button>
-            </div>
-          ` : ""}
         </div>
       `;
     }).join("")}
@@ -637,7 +631,7 @@ async function deleteCompany(companyId) {
   const company = companies.find(item => String(item.id) === String(companyId));
   if (!company) return;
 
-  const confirmed = window.confirm(`سيتم حذف الشركة "${company.name}" مع كل منتجاتها. هل أنت متأكد؟`);
+  const confirmed = await window.showConfirmModal("حذف الشركة", `سيتم حذف الشركة "${company.name}" مع كل منتجاتها. هل أنت متأكد؟`);
   if (!confirmed) return;
 
   try {
@@ -673,7 +667,7 @@ async function deleteProduct(productId) {
   const product = products.find(item => String(item.id) === String(productId));
   if (!product) return;
 
-  const confirmed = window.confirm(`هل أنت متأكد من حذف المنتج "${product.name}"؟`);
+  const confirmed = await window.showConfirmModal("حذف المنتج", `هل أنت متأكد من حذف المنتج "${product.name}"؟`);
   if (!confirmed) return;
 
   try {
@@ -899,16 +893,16 @@ async function loadCompaniesOnce() {
 
 async function loadCompanyProductsCounts() {
   try {
-    const snapshot = await getDocs(collection(db, "products"));
+    // نجيب بس companyId من كل منتج بدون باقي البيانات الثقيلة
+    const snapshot = await getDocs(
+      query(collection(db, "products"))
+    );
 
     companyProductsCounts = {};
 
     snapshot.docs.forEach(docSnap => {
-      const data = docSnap.data();
-      const companyId = String(data.companyId || "");
-
+      const companyId = String(docSnap.data().companyId || "");
       if (!companyId) return;
-
       companyProductsCounts[companyId] = (companyProductsCounts[companyId] || 0) + 1;
     });
   } catch (error) {
