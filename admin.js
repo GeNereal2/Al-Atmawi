@@ -123,6 +123,41 @@ const cancelProductEditBtn = document.getElementById("cancelProductEditBtn");
 const adminProductsList = document.getElementById("adminProductsList");
 
 /* =========================
+   Confirm Modal
+========================= */
+function showConfirmModal(title, msg) {
+  return new Promise(resolve => {
+    const overlay   = document.getElementById("confirmModal");
+    const titleEl   = document.getElementById("confirmModalTitle");
+    const msgEl     = document.getElementById("confirmModalMsg");
+    const cancelBtn = document.getElementById("confirmModalCancel");
+    const okBtn     = document.getElementById("confirmModalOk");
+
+    titleEl.textContent = title;
+    msgEl.textContent   = msg;
+    overlay.classList.add("active");
+    document.body.style.overflow = "hidden";
+
+    function close(result) {
+      overlay.classList.remove("active");
+      document.body.style.overflow = "";
+      cancelBtn.removeEventListener("click", onCancel);
+      okBtn.removeEventListener("click", onOk);
+      overlay.removeEventListener("click", onOverlay);
+      resolve(result);
+    }
+
+    function onCancel()   { close(false); }
+    function onOk()       { close(true);  }
+    function onOverlay(e) { if (e.target === overlay) close(false); }
+
+    cancelBtn.addEventListener("click", onCancel);
+    okBtn.addEventListener("click", onOk);
+    overlay.addEventListener("click", onOverlay);
+  });
+}
+
+/* =========================
    Helpers
 ========================= */
 function escapeHtml(text) {
@@ -596,7 +631,7 @@ async function deleteCompany(companyId) {
   const company = companies.find(item => String(item.id) === String(companyId));
   if (!company) return;
 
-  const confirmed = await window.showConfirmModal("حذف الشركة", `سيتم حذف الشركة "${company.name}" مع كل منتجاتها. هل أنت متأكد؟`);
+  const confirmed = await showConfirmModal("حذف الشركة", `سيتم حذف الشركة "${company.name}" مع كل منتجاتها. هل أنت متأكد؟`);
   if (!confirmed) return;
 
   try {
@@ -632,7 +667,7 @@ async function deleteProduct(productId) {
   const product = products.find(item => String(item.id) === String(productId));
   if (!product) return;
 
-  const confirmed = await window.showConfirmModal("حذف المنتج", `هل أنت متأكد من حذف المنتج "${product.name}"؟`);
+  const confirmed = await showConfirmModal("حذف المنتج", `هل أنت متأكد من حذف المنتج "${product.name}"؟`);
   if (!confirmed) return;
 
   try {
