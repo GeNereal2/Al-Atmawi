@@ -6,156 +6,53 @@
   <title>نقل الصور إلى Cloudinary</title>
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
-    body {
-      font-family: 'Tahoma', sans-serif;
-      background: #1a0a06;
-      color: #fff;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    .box {
-      background: #2f1b14;
-      border-radius: 20px;
-      padding: 40px;
-      max-width: 700px;
-      width: 100%;
-      border: 1px solid rgba(201,151,62,0.2);
-      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-    }
-    h1 {
-      font-size: 1.6rem;
-      color: #e8c97a;
-      margin-bottom: 8px;
-    }
-    .subtitle { color: rgba(255,255,255,0.55); margin-bottom: 32px; font-size: 0.95rem; }
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(3,1fr);
-      gap: 14px;
-      margin-bottom: 28px;
-    }
-    .stat {
-      background: rgba(255,255,255,0.06);
-      border-radius: 14px;
-      padding: 18px;
-      text-align: center;
-      border: 1px solid rgba(201,151,62,0.12);
-    }
+    body { font-family:'Tahoma',sans-serif; background:#1a0a06; color:#fff; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+    .box { background:#2f1b14; border-radius:20px; padding:40px; max-width:700px; width:100%; border:1px solid rgba(201,151,62,0.2); box-shadow:0 20px 60px rgba(0,0,0,0.5); }
+    h1 { font-size:1.6rem; color:#e8c97a; margin-bottom:8px; }
+    .subtitle { color:rgba(255,255,255,0.55); margin-bottom:32px; font-size:0.95rem; }
+    .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:28px; }
+    .stat { background:rgba(255,255,255,0.06); border-radius:14px; padding:18px; text-align:center; border:1px solid rgba(201,151,62,0.12); }
     .stat strong { display:block; font-size:2rem; color:#e8c97a; line-height:1; }
-    .stat span   { font-size:0.82rem; color:rgba(255,255,255,0.55); margin-top:6px; display:block; }
-
-    .progress-wrap {
-      background: rgba(255,255,255,0.08);
-      border-radius: 999px;
-      height: 12px;
-      margin-bottom: 8px;
-      overflow: hidden;
-    }
-    .progress-bar {
-      height: 100%;
-      background: linear-gradient(90deg, #c9973e, #e8c97a);
-      border-radius: 999px;
-      width: 0%;
-      transition: width 0.4s ease;
-    }
+    .stat span { font-size:0.82rem; color:rgba(255,255,255,0.55); margin-top:6px; display:block; }
+    .progress-wrap { background:rgba(255,255,255,0.08); border-radius:999px; height:12px; margin-bottom:8px; overflow:hidden; }
+    .progress-bar { height:100%; background:linear-gradient(90deg,#c9973e,#e8c97a); border-radius:999px; width:0%; transition:width 0.4s ease; }
     .progress-text { font-size:0.85rem; color:rgba(255,255,255,0.55); margin-bottom:24px; }
-
-    .log {
-      background: rgba(0,0,0,0.35);
-      border-radius: 14px;
-      padding: 16px;
-      height: 240px;
-      overflow-y: auto;
-      font-size: 0.83rem;
-      line-height: 1.8;
-      margin-bottom: 24px;
-      border: 1px solid rgba(255,255,255,0.06);
-      font-family: monospace;
-    }
-    .log-ok     { color: #4ade80; }
-    .log-skip   { color: #facc15; }
-    .log-error  { color: #f87171; }
-    .log-info   { color: rgba(255,255,255,0.6); }
-
-    .btn {
-      width: 100%;
-      padding: 16px;
-      border-radius: 999px;
-      font-size: 1rem;
-      font-weight: 700;
-      border: none;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-    .btn-start {
-      background: linear-gradient(135deg, #c9973e, #e8c97a);
-      color: #2f1b14;
-    }
-    .btn-start:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(201,151,62,0.4); }
+    .log { background:rgba(0,0,0,0.35); border-radius:14px; padding:16px; height:240px; overflow-y:auto; font-size:0.83rem; line-height:1.8; margin-bottom:24px; border:1px solid rgba(255,255,255,0.06); font-family:monospace; }
+    .log-ok { color:#4ade80; }
+    .log-skip { color:#facc15; }
+    .log-error { color:#f87171; }
+    .log-info { color:rgba(255,255,255,0.6); }
+    .btn { width:100%; padding:16px; border-radius:999px; font-size:1rem; font-weight:700; border:none; cursor:pointer; transition:all 0.3s ease; }
+    .btn-start { background:linear-gradient(135deg,#c9973e,#e8c97a); color:#2f1b14; }
+    .btn-start:hover { transform:translateY(-2px); box-shadow:0 10px 30px rgba(201,151,62,0.4); }
     .btn-start:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
-
-    .warning {
-      background: rgba(251,191,36,0.1);
-      border: 1px solid rgba(251,191,36,0.3);
-      border-radius: 12px;
-      padding: 14px 16px;
-      font-size: 0.88rem;
-      color: #fbbf24;
-      margin-bottom: 24px;
-      line-height: 1.7;
-    }
-
-    .done-msg {
-      text-align: center;
-      padding: 20px;
-      background: rgba(74,222,128,0.1);
-      border: 1px solid rgba(74,222,128,0.3);
-      border-radius: 14px;
-      color: #4ade80;
-      font-weight: 700;
-      font-size: 1.1rem;
-      display: none;
-    }
+    .warning { background:rgba(251,191,36,0.1); border:1px solid rgba(251,191,36,0.3); border-radius:12px; padding:14px 16px; font-size:0.88rem; color:#fbbf24; margin-bottom:24px; line-height:1.7; }
+    .done-msg { text-align:center; padding:20px; background:rgba(74,222,128,0.1); border:1px solid rgba(74,222,128,0.3); border-radius:14px; color:#4ade80; font-weight:700; font-size:1.1rem; display:none; margin-top:16px; }
   </style>
 </head>
 <body>
 <div class="box">
   <h1>🚀 نقل الصور إلى Cloudinary</h1>
-  <p class="subtitle">هذا السكريبت ينقل كل صور الشركات والمنتجات من base64 إلى Cloudinary تلقائياً</p>
-
+  <p class="subtitle">ينقل كل صور الشركات والمنتجات من base64 إلى Cloudinary تلقائياً</p>
   <div class="warning">
-    ⚠️ شغّل هذا الملف مرة وحدة بس — بعد ما ينتهي ما تشغله مرة ثانية.<br>
-    📌 خلّ الصفحة مفتوحة حتى تخلص عملية النقل كاملة.
+    ⚠️ شغّل هذا الملف مرة وحدة بس.<br>
+    📌 خلّ الصفحة مفتوحة حتى تخلص عملية النقل.
   </div>
-
   <div class="stats">
     <div class="stat"><strong id="statTotal">0</strong><span>إجمالي</span></div>
     <div class="stat"><strong id="statDone">0</strong><span>تم نقلها</span></div>
     <div class="stat"><strong id="statSkip">0</strong><span>تم تخطيها</span></div>
   </div>
-
-  <div class="progress-wrap">
-    <div class="progress-bar" id="progressBar"></div>
-  </div>
+  <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
   <div class="progress-text" id="progressText">اضغط ابدأ لتشغيل عملية النقل</div>
-
   <div class="log" id="log"></div>
-
-  <div class="done-msg" id="doneMsg">✅ تم نقل كل الصور بنجاح! يمكنك إغلاق هذه الصفحة.</div>
-
+  <div class="done-msg" id="doneMsg">✅ تم نقل كل الصور! يمكنك إغلاق هذه الصفحة.</div>
   <button class="btn btn-start" id="startBtn" onclick="startMigration()">ابدأ نقل الصور</button>
 </div>
 
-<!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {
-  getFirestore, collection, getDocs, updateDoc, doc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAoxZQ96uziaGETAEWH0BONmgPPUoa-wD8",
@@ -167,21 +64,20 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const db  = getFirestore(app);
+const db = getFirestore(app);
 
-const CLOUDINARY_CLOUD_NAME    = "dooabdkr5";
-const CLOUDINARY_UPLOAD_PRESET = "alatmawi";
-const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
+const CLOUD_NAME = "dooabdkr5";
+const UPLOAD_PRESET = "alatmawi";
+const UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
 
-/* ===== Helpers ===== */
-const logEl       = document.getElementById("log");
+const logEl = document.getElementById("log");
 const progressBar = document.getElementById("progressBar");
 const progressTxt = document.getElementById("progressText");
-const statTotal   = document.getElementById("statTotal");
-const statDone    = document.getElementById("statDone");
-const statSkip    = document.getElementById("statSkip");
-const startBtn    = document.getElementById("startBtn");
-const doneMsg     = document.getElementById("doneMsg");
+const statTotal = document.getElementById("statTotal");
+const statDone = document.getElementById("statDone");
+const statSkip = document.getElementById("statSkip");
+const startBtn = document.getElementById("startBtn");
+const doneMsg = document.getElementById("doneMsg");
 
 let total = 0, done = 0, skipped = 0;
 
@@ -195,49 +91,52 @@ function addLog(msg, type = "info") {
 
 function updateStats() {
   statTotal.textContent = total;
-  statDone.textContent  = done;
-  statSkip.textContent  = skipped;
+  statDone.textContent = done;
+  statSkip.textContent = skipped;
   const pct = total ? Math.round(((done + skipped) / total) * 100) : 0;
   progressBar.style.width = pct + "%";
   progressTxt.textContent = `${done + skipped} من ${total} (${pct}%)`;
 }
 
-async function uploadBase64ToCloudinary(base64, folder) {
-  // إرسال base64 مباشرة كـ JSON
-  const res = await fetch(CLOUDINARY_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      file: base64,
-      upload_preset: CLOUDINARY_UPLOAD_PRESET,
-      use_filename: false,
-      unique_filename: true
-    })
-  });
-
-  if (!res.ok) {
-    const errData = await res.json().catch(() => ({}));
-    throw new Error(errData.error?.message || `HTTP ${res.status}`);
-  }
-  const data = await res.json();
-  return data.secure_url;
-}
-
-function isBase64Image(str) {
+function isBase64(str) {
   return typeof str === "string" && str.startsWith("data:image");
 }
 
+async function uploadToCloudinary(base64) {
+  const formData = new FormData();
+
+  // تحويل base64 لـ Blob
+  const arr = base64.split(",");
+  const mime = arr[0].match(/:(.*?);/)[1];
+  const bstr = atob(arr[1]);
+  const u8arr = new Uint8Array(bstr.length);
+  for (let i = 0; i < bstr.length; i++) u8arr[i] = bstr.charCodeAt(i);
+  const blob = new Blob([u8arr], { type: mime });
+
+  formData.append("file", blob);
+  formData.append("upload_preset", UPLOAD_PRESET);
+
+  const res = await fetch(UPLOAD_URL, { method: "POST", body: formData });
+  const data = await res.json();
+
+  if (!res.ok || data.error) {
+    throw new Error(data.error?.message || `HTTP ${res.status}`);
+  }
+
+  return data.secure_url;
+}
+
 async function migrateCollection(colName, label) {
-  addLog(`\n── بدأ نقل ${label} ──`, "info");
+  addLog(`── بدأ نقل ${label} ──`, "info");
   const snapshot = await getDocs(collection(db, colName));
 
   for (const docSnap of snapshot.docs) {
-    const data  = docSnap.data();
+    const data = docSnap.data();
     const image = data.image || "";
-    const name  = data.name  || docSnap.id;
+    const name = data.name || docSnap.id;
 
-    if (!isBase64Image(image)) {
-      addLog(`⏭ تخطي "${name}" — الصورة رابط URL مسبقاً`, "skip");
+    if (!isBase64(image)) {
+      addLog(`⏭ تخطي "${name}" — رابط URL`, "skip");
       skipped++;
       updateStats();
       continue;
@@ -245,17 +144,16 @@ async function migrateCollection(colName, label) {
 
     try {
       addLog(`⬆ رفع "${name}"...`, "info");
-      const url = await uploadBase64ToCloudinary(image, colName);
+      const url = await uploadToCloudinary(image);
       await updateDoc(doc(db, colName, docSnap.id), { image: url });
-      addLog(`✓ تم "${name}" → ${url.slice(0, 60)}...`, "ok");
+      addLog(`✓ "${name}" → نجح`, "ok");
       done++;
     } catch (err) {
-      addLog(`✗ فشل "${name}": ${err.message}`, "error");
+      addLog(`✗ "${name}": ${err.message}`, "error");
     }
 
     updateStats();
-    // توقف قصير عشان ما نحمّل Cloudinary
-    await new Promise(r => setTimeout(r, 300));
+    await new Promise(r => setTimeout(r, 500));
   }
 }
 
@@ -266,25 +164,22 @@ window.startMigration = async function() {
   done = 0; skipped = 0; total = 0;
 
   try {
-    // احسب الإجمالي
     const [compSnap, prodSnap] = await Promise.all([
       getDocs(collection(db, "companies")),
       getDocs(collection(db, "products"))
     ]);
     total = compSnap.size + prodSnap.size;
     updateStats();
-
-    addLog(`📦 إجمالي العناصر: ${total} (${compSnap.size} شركة + ${prodSnap.size} منتج)`, "info");
+    addLog(`📦 إجمالي: ${total} (${compSnap.size} شركة + ${prodSnap.size} منتج)`, "info");
 
     await migrateCollection("companies", "الشركات");
-    await migrateCollection("products",  "المنتجات");
+    await migrateCollection("products", "المنتجات");
 
-    addLog("\n🎉 اكتملت عملية النقل!", "ok");
+    addLog("🎉 اكتملت عملية النقل!", "ok");
     doneMsg.style.display = "block";
     startBtn.textContent = "✅ اكتمل النقل";
-
   } catch (err) {
-    addLog(`\n❌ خطأ عام: ${err.message}`, "error");
+    addLog(`❌ خطأ: ${err.message}`, "error");
     startBtn.disabled = false;
     startBtn.textContent = "إعادة المحاولة";
   }
