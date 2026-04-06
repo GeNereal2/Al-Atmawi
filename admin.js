@@ -198,7 +198,6 @@ async function uploadToCloudinary(file) {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-  formData.append("folder", "al-atmawi");
 
   const response = await fetch(CLOUDINARY_UPLOAD_URL, {
     method: "POST",
@@ -206,7 +205,8 @@ async function uploadToCloudinary(file) {
   });
 
   if (!response.ok) {
-    throw new Error("فشل رفع الصورة. تحقق من إعدادات Cloudinary.");
+    const errData = await response.json().catch(() => ({}));
+    throw new Error(errData.error?.message || "فشل رفع الصورة. تحقق من إعدادات Cloudinary.");
   }
 
   const data = await response.json();
