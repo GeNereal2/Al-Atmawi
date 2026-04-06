@@ -1024,6 +1024,7 @@ async function refreshAllAdminData() {
   }
 
   renderDashboardData();
+  updateCounters();
 }
 
 /* =========================
@@ -1064,4 +1065,5 @@ onAuthStateChanged(auth, async (user) => {
   }
 
   renderDashboardData();
+  updateCounters();
 });
