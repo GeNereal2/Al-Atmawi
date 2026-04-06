@@ -17,7 +17,7 @@
     .progress-wrap { background:rgba(255,255,255,0.08); border-radius:999px; height:12px; margin-bottom:8px; overflow:hidden; }
     .progress-bar { height:100%; background:linear-gradient(90deg,#c9973e,#e8c97a); border-radius:999px; width:0%; transition:width 0.4s ease; }
     .progress-text { font-size:0.85rem; color:rgba(255,255,255,0.55); margin-bottom:24px; }
-    .log { background:rgba(0,0,0,0.35); border-radius:14px; padding:16px; height:240px; overflow-y:auto; font-size:0.83rem; line-height:1.8; margin-bottom:24px; border:1px solid rgba(255,255,255,0.06); font-family:monospace; }
+    .log { background:rgba(0,0,0,0.35); border-radius:14px; padding:16px; height:260px; overflow-y:auto; font-size:0.83rem; line-height:1.8; margin-bottom:24px; border:1px solid rgba(255,255,255,0.06); font-family:monospace; direction:ltr; }
     .log-ok { color:#4ade80; }
     .log-skip { color:#facc15; }
     .log-error { color:#f87171; }
@@ -67,17 +67,18 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const CLOUD_NAME = "dooabdkr5";
-const UPLOAD_PRESET = "alatmawi";
+const API_KEY    = "517312829342155";
+const API_SECRET = "1ni7KtgzkQzeJUO0ktMHMFSnPm0";
 const UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
 
-const logEl = document.getElementById("log");
-const progressBar = document.getElementById("progressBar");
-const progressTxt = document.getElementById("progressText");
-const statTotal = document.getElementById("statTotal");
-const statDone = document.getElementById("statDone");
-const statSkip = document.getElementById("statSkip");
-const startBtn = document.getElementById("startBtn");
-const doneMsg = document.getElementById("doneMsg");
+const logEl      = document.getElementById("log");
+const progressBar= document.getElementById("progressBar");
+const progressTxt= document.getElementById("progressText");
+const statTotal  = document.getElementById("statTotal");
+const statDone   = document.getElementById("statDone");
+const statSkip   = document.getElementById("statSkip");
+const startBtn   = document.getElementById("startBtn");
+const doneMsg    = document.getElementById("doneMsg");
 
 let total = 0, done = 0, skipped = 0;
 
@@ -91,8 +92,8 @@ function addLog(msg, type = "info") {
 
 function updateStats() {
   statTotal.textContent = total;
-  statDone.textContent = done;
-  statSkip.textContent = skipped;
+  statDone.textContent  = done;
+  statSkip.textContent  = skipped;
   const pct = total ? Math.round(((done + skipped) / total) * 100) : 0;
   progressBar.style.width = pct + "%";
   progressTxt.textContent = `${done + skipped} من ${total} (${pct}%)`;
@@ -102,21 +103,37 @@ function isBase64(str) {
   return typeof str === "string" && str.startsWith("data:image");
 }
 
-async function uploadToCloudinary(base64) {
-  const formData = new FormData();
+// توليد signature للـ signed upload
+async function generateSignature(params) {
+  const sortedParams = Object.keys(params).sort().map(k => `${k}=${params[k]}`).join("&");
+  const msgToSign = sortedParams + API_SECRET;
+  const encoder = new TextEncoder();
+  const data = encoder.encode(msgToSign);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2,"0")).join("");
+}
 
+async function uploadToCloudinary(base64) {
   // تحويل base64 لـ Blob
-  const arr = base64.split(",");
+  const arr  = base64.split(",");
   const mime = arr[0].match(/:(.*?);/)[1];
   const bstr = atob(arr[1]);
-  const u8arr = new Uint8Array(bstr.length);
+  const u8arr= new Uint8Array(bstr.length);
   for (let i = 0; i < bstr.length; i++) u8arr[i] = bstr.charCodeAt(i);
   const blob = new Blob([u8arr], { type: mime });
 
-  formData.append("file", blob);
-  formData.append("upload_preset", UPLOAD_PRESET);
+  const timestamp = Math.round(Date.now() / 1000);
+  const params = { timestamp: String(timestamp) };
+  const signature = await generateSignature(params);
 
-  const res = await fetch(UPLOAD_URL, { method: "POST", body: formData });
+  const formData = new FormData();
+  formData.append("file", blob);
+  formData.append("api_key", API_KEY);
+  formData.append("timestamp", timestamp);
+  formData.append("signature", signature);
+
+  const res  = await fetch(UPLOAD_URL, { method: "POST", body: formData });
   const data = await res.json();
 
   if (!res.ok || data.error) {
@@ -131,9 +148,9 @@ async function migrateCollection(colName, label) {
   const snapshot = await getDocs(collection(db, colName));
 
   for (const docSnap of snapshot.docs) {
-    const data = docSnap.data();
+    const data  = docSnap.data();
     const image = data.image || "";
-    const name = data.name || docSnap.id;
+    const name  = data.name  || docSnap.id;
 
     if (!isBase64(image)) {
       addLog(`⏭ تخطي "${name}" — رابط URL`, "skip");
@@ -153,7 +170,7 @@ async function migrateCollection(colName, label) {
     }
 
     updateStats();
-    await new Promise(r => setTimeout(r, 500));
+    await new Promise(r => setTimeout(r, 400));
   }
 }
 
@@ -173,7 +190,7 @@ window.startMigration = async function() {
     addLog(`📦 إجمالي: ${total} (${compSnap.size} شركة + ${prodSnap.size} منتج)`, "info");
 
     await migrateCollection("companies", "الشركات");
-    await migrateCollection("products", "المنتجات");
+    await migrateCollection("products",  "المنتجات");
 
     addLog("🎉 اكتملت عملية النقل!", "ok");
     doneMsg.style.display = "block";
