@@ -209,7 +209,9 @@ async function uploadBase64ToCloudinary(base64, folder) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       file: base64,
-      upload_preset: CLOUDINARY_UPLOAD_PRESET
+      upload_preset: CLOUDINARY_UPLOAD_PRESET,
+      use_filename: false,
+      unique_filename: true
     })
   });
 
