@@ -186,7 +186,7 @@ function exportAllData() {
    Cloudinary Upload
 ========================= */
 const CLOUDINARY_CLOUD_NAME = "dooabdkr5";
-const CLOUDINARY_UPLOAD_PRESET = "Al-Atmawi";
+const CLOUDINARY_UPLOAD_PRESET = "alatmawi";
 const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
 
 async function uploadToCloudinary(file) {
