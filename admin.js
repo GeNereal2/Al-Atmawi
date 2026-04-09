@@ -248,18 +248,68 @@ async function uploadToCloudinary(file) {
   return data.secure_url;
 }
 
+async function convertHeicToJpeg(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width  = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext("2d");
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0);
+          canvas.toBlob(blob => {
+            if (blob) resolve(new File([blob], file.name.replace(/\.heic$/i, ".jpg"), { type: "image/jpeg" }));
+            else reject(new Error("فشل تحويل صورة HEIC"));
+          }, "image/jpeg", 0.85);
+        };
+        img.onerror = () => reject(new Error("فشل تحميل صورة HEIC"));
+        img.src = e.target.result;
+      } catch(err) { reject(err); }
+    };
+    reader.onerror = () => reject(new Error("فشل قراءة الملف"));
+    reader.readAsDataURL(file);
+  });
+}
+
 async function handleImageSelection(fileInput, hiddenInput, previewElement) {
-  const file = fileInput.files[0];
+  let file = fileInput.files[0];
   if (!file) return;
+
+  const label = fileInput.closest(".form-group")?.querySelector("label");
+  const originalLabel = label?.textContent || "";
 
   try {
     previewElement.src = "";
     previewElement.classList.add("hidden");
     hiddenInput.value = "";
 
-    // إظهار حالة التحميل
-    const label = fileInput.closest(".form-group")?.querySelector("label");
-    const originalLabel = label?.textContent || "";
+    const allowedTypes = ["image/jpeg","image/jpg","image/png","image/webp","image/heic","image/heif"];
+    const isHeic = file.type === "image/heic" || file.type === "image/heif" ||
+                   file.name.toLowerCase().endsWith(".heic") ||
+                   file.name.toLowerCase().endsWith(".heif");
+
+    if (!allowedTypes.includes(file.type) && !isHeic) {
+      alert("صيغة الصورة غير مدعومة. استخدم JPG أو PNG أو WEBP أو HEIC");
+      fileInput.value = "";
+      return;
+    }
+
+    // تحويل HEIC لـ JPEG أولاً
+    if (isHeic) {
+      if (label) label.textContent = "⏳ جاري تحويل صورة HEIC...";
+      try {
+        file = await convertHeicToJpeg(file);
+      } catch(err) {
+        // لو فشل التحويل جرب الرفع مباشرة
+        console.warn("HEIC conversion failed, uploading directly:", err);
+      }
+    }
+
     if (label) label.textContent = "⏳ جاري رفع الصورة...";
 
     const imageUrl = await uploadToCloudinary(file);
@@ -277,6 +327,7 @@ async function handleImageSelection(fileInput, hiddenInput, previewElement) {
     hiddenInput.value = "";
     previewElement.src = "";
     previewElement.classList.add("hidden");
+    if (label) label.textContent = originalLabel;
   }
 }
 
