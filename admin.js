@@ -225,10 +225,7 @@ const CLOUDINARY_UPLOAD_PRESET = "alatmawi";
 const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
 
 async function uploadToCloudinary(file) {
-  const allowedTypes = ["image/jpeg","image/jpg","image/png","image/webp"];
-  if (!allowedTypes.includes(file.type)) {
-    throw new Error("صيغة الصورة غير مدعومة. استخدم JPG أو PNG أو WEBP");
-  }
+  // بنقبل كل الصور هنا لأن HEIC تتحول قبل ما توصل هنا
 
   const formData = new FormData();
   formData.append("file", file);
@@ -288,10 +285,11 @@ async function handleImageSelection(fileInput, hiddenInput, previewElement) {
     previewElement.classList.add("hidden");
     hiddenInput.value = "";
 
-    const allowedTypes = ["image/jpeg","image/jpg","image/png","image/webp","image/heic","image/heif"];
     const isHeic = file.type === "image/heic" || file.type === "image/heif" ||
                    file.name.toLowerCase().endsWith(".heic") ||
                    file.name.toLowerCase().endsWith(".heif");
+
+    const allowedTypes = ["image/jpeg","image/jpg","image/png","image/webp"];
 
     if (!allowedTypes.includes(file.type) && !isHeic) {
       alert("صيغة الصورة غير مدعومة. استخدم JPG أو PNG أو WEBP أو HEIC");
@@ -305,7 +303,6 @@ async function handleImageSelection(fileInput, hiddenInput, previewElement) {
       try {
         file = await convertHeicToJpeg(file);
       } catch(err) {
-        // لو فشل التحويل جرب الرفع مباشرة
         console.warn("HEIC conversion failed, uploading directly:", err);
       }
     }
