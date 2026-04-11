@@ -30,6 +30,7 @@
           <li><a href="admin.html" class="admin-link">لوحة الأدمن</a></li>
         </ul>
       </nav>
+      <button id="themeToggleBtn" class="theme-toggle-btn" type="button" title="تبديل الوضع">🌙</button>
     </div>
   </header>
 
@@ -120,7 +121,7 @@
           <div class="contact-card">
             <span class="contact-card-icon">📞</span>
             <h3>الهاتف</h3>
-            <p><a href="tel:+970599202276">+970 599 202 276</a></p>
+            <p><a href="tel:+970599202276">+970 599 202 276</a> <button id="copyPhoneBtn" class="copy-phone-btn" type="button" title="نسخ الرقم">📋</button></p>
           </div>
           <div class="contact-card">
             <span class="contact-card-icon">💬</span>
@@ -155,9 +156,12 @@
         <div id="modalBadge" class="modal-badge"></div>
         <h3 id="modalName"></h3>
         <p id="modalDesc" style="display:none"></p>
+        <button id="modalShareBtn" class="modal-share-btn" type="button">🔗 مشاركة المنتج</button>
       </div>
     </div>
   </div>
+
+  <div id="toastMsg" class="toast-msg"></div>
 
   <script type="module" src="script.js?v=7"></script>
   <script>
@@ -197,6 +201,50 @@
         navigator.serviceWorker.register("./service-worker.js").catch(() => {});
       });
     }
+
+    /* ① Dark / Light Mode */
+    const themeBtn = document.getElementById("themeToggleBtn");
+    const savedTheme = localStorage.getItem("al-atmawi-theme") || "light";
+    function applyTheme(t) {
+      document.documentElement.setAttribute("data-theme", t);
+      themeBtn.textContent = t === "dark" ? "☀️" : "🌙";
+      localStorage.setItem("al-atmawi-theme", t);
+    }
+    applyTheme(savedTheme);
+    themeBtn.addEventListener("click", () => {
+      applyTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark");
+    });
+
+    /* ② Copy Phone */
+    function showToast(msg) {
+      const t = document.getElementById("toastMsg");
+      t.textContent = msg;
+      t.classList.add("show");
+      setTimeout(() => t.classList.remove("show"), 2500);
+    }
+    document.getElementById("copyPhoneBtn").addEventListener("click", function() {
+      navigator.clipboard.writeText("+970599202276").then(() => {
+        showToast("✅ تم نسخ الرقم!");
+        this.textContent = "✅";
+        setTimeout(() => this.textContent = "📋", 2000);
+      }).catch(() => showToast("❌ فشل النسخ"));
+    });
+
+    /* ③ Share Product */
+    document.getElementById("modalShareBtn").addEventListener("click", function() {
+      const name = document.getElementById("modalName").textContent;
+      const badge = document.getElementById("modalBadge").textContent;
+      const text = name + (badge ? " — " + badge : "") + "\nمن Al-Atmawi Sweets 🍫";
+      if (navigator.share) {
+        navigator.share({ title: name, text: text, url: location.href });
+      } else {
+        navigator.clipboard.writeText(text + "\n" + location.href).then(() => {
+          showToast("✅ تم نسخ رابط المنتج!");
+          this.textContent = "✅ تم النسخ";
+          setTimeout(() => this.textContent = "🔗 مشاركة المنتج", 2000);
+        });
+      }
+    });
   </script>
 </body>
 </html>
