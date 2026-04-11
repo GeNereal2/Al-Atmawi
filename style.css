@@ -217,7 +217,7 @@ ul { list-style:none; }
   gap:8px;
   padding:8px 18px;
   border-radius:999px;
-  background:rgba(201,151,62,0.22);
+  background:rgba(35, 226, 10, 0.22);
   border:1px solid rgba(201,151,62,0.4);
   margin-bottom:24px;
   font-size:0.9rem;
@@ -357,7 +357,7 @@ ul { list-style:none; }
   background:var(--white);
   border-radius:var(--radius-md);
   box-shadow:var(--shadow-sm);
-  border:1px solid rgba(201,151,62,0.08);
+  border:1px solid rgba(62, 201, 80, 0.08);
   overflow:hidden;
   transition:var(--transition);
   display:flex;
@@ -842,4 +842,139 @@ footer {
   color: var(--muted);
   font-size: 0.88rem;
   margin-top: 4px;
+}
+/* ===== ① Theme Toggle Button ===== */
+.theme-toggle-btn {
+  background: transparent;
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+  width: 40px; height: 40px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: var(--transition);
+}
+.theme-toggle-btn:hover { border-color: var(--gold); background: var(--gold-pale); }
+
+/* ===== ① Dark Mode Vars ===== */
+[data-theme="dark"] {
+  --choco: #e8d5c8;
+  --choco-dark: #f5ede6;
+  --choco-mid: #d4b8a8;
+  --gold: #e8b84b;
+  --gold-light: #f5d880;
+  --gold-pale: rgba(232,184,75,0.12);
+  --cream: #1a1008;
+  --white: #211409;
+  --text: #f0e8df;
+  --muted: rgba(240,232,223,0.55);
+  --light: #2a1810;
+  --border: rgba(201,151,62,0.18);
+  --shadow: 0 16px 48px rgba(0,0,0,0.5);
+  --shadow-sm: 0 4px 20px rgba(0,0,0,0.4);
+  background: #1a1008;
+  color: #f0e8df;
+}
+[data-theme="dark"] body { background: #1a1008; color: #f0e8df; }
+[data-theme="dark"] body * { color: inherit; }
+[data-theme="dark"] h1,[data-theme="dark"] h2,[data-theme="dark"] h3,[data-theme="dark"] h4 { color: #f5ede6; }
+[data-theme="dark"] p,[data-theme="dark"] span,[data-theme="dark"] li { color: rgba(240,232,223,0.75); }
+[data-theme="dark"] a { color: rgba(240,232,223,0.85); }
+[data-theme="dark"] .topbar { background: rgba(26,16,8,0.97); border-bottom-color: rgba(201,151,62,0.18); }
+[data-theme="dark"] .logo { color: #f0e8df; }
+[data-theme="dark"] .logo span { color: var(--gold); }
+[data-theme="dark"] .nav-links a { color: rgba(240,232,223,0.7); }
+[data-theme="dark"] .nav-links a:hover { background: rgba(201,151,62,0.1); color: #f0e8df; }
+[data-theme="dark"] .admin-link { border-color: rgba(201,151,62,0.2); }
+[data-theme="dark"] .brands { background: linear-gradient(180deg,#1a1008,#211409); }
+[data-theme="dark"] .card { background: #211409; border-color: rgba(201,151,62,0.12); }
+[data-theme="dark"] .card-body { background: #211409; border-top-color: rgba(201,151,62,0.1); }
+[data-theme="dark"] .card-body h3 { color: #f0e8df; }
+[data-theme="dark"] .card-image { background: linear-gradient(145deg,#2a1a0c,#211409); }
+[data-theme="dark"] .section-header h2 { color: #f0e8df; }
+[data-theme="dark"] .section-header p { color: rgba(240,232,223,0.5); }
+[data-theme="dark"] .filters-bar { background: #211409; border-color: rgba(201,151,62,0.1); }
+[data-theme="dark"] .filter-btn { background: #211409; color: rgba(240,232,223,0.7); border-color: rgba(201,151,62,0.15); }
+[data-theme="dark"] .product-card { background: #211409; border-color: rgba(201,151,62,0.08); }
+[data-theme="dark"] .product-image { background: linear-gradient(145deg,#2a1a0c,#211409); border-bottom-color: rgba(201,151,62,0.08); }
+[data-theme="dark"] .product-content h4 { color: #f0e8df; }
+[data-theme="dark"] .product-content p { color: rgba(240,232,223,0.5); }
+[data-theme="dark"] .about-box { background: #211409; border-color: rgba(201,151,62,0.1); }
+[data-theme="dark"] .about-text h2 { color: #f0e8df; }
+[data-theme="dark"] .about-text p { color: rgba(240,232,223,0.55); }
+[data-theme="dark"] .about-feature { background: rgba(201,151,62,0.07); border-color: rgba(201,151,62,0.12); }
+[data-theme="dark"] .about-feature h4 { color: #f0e8df; }
+[data-theme="dark"] .about-feature p { color: rgba(240,232,223,0.5); }
+[data-theme="dark"] .contact-box { background: linear-gradient(135deg,#0d0704,#1a1008); }
+[data-theme="dark"] .modal-box { background: #211409; }
+[data-theme="dark"] .modal-image-wrap { background: linear-gradient(145deg,#2a1a0c,#211409); }
+[data-theme="dark"] .modal-info { border-top-color: rgba(201,151,62,0.12); }
+[data-theme="dark"] .modal-info h3 { color: #f0e8df; }
+[data-theme="dark"] .modal-info p { color: rgba(240,232,223,0.55); }
+[data-theme="dark"] .modal-close { background: rgba(255,255,255,0.06); color: #f0e8df; border-color: rgba(201,151,62,0.15); }
+[data-theme="dark"] .empty-message { background: #211409; color: rgba(240,232,223,0.4); }
+[data-theme="dark"] .skeleton-image,
+[data-theme="dark"] .skeleton-product-image,
+[data-theme="dark"] .skeleton-line {
+  background: linear-gradient(90deg,#2a1a0c 25%,#331f0f 50%,#2a1a0c 75%);
+  background-size: 700px 100%;
+}
+
+/* ===== ② Copy Phone Button ===== */
+.copy-phone-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.95rem;
+  vertical-align: middle;
+  opacity: 0.6;
+  transition: opacity 0.2s, transform 0.2s;
+  padding: 0 2px;
+}
+.copy-phone-btn:hover { opacity: 1; transform: scale(1.2); }
+
+/* ===== ② Toast ===== */
+.toast-msg {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%) translateY(16px);
+  background: rgba(47,27,20,0.95);
+  color: #fff;
+  padding: 11px 24px;
+  border-radius: 999px;
+  font-family: 'Tajawal', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  z-index: 999999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s, transform 0.3s;
+  white-space: nowrap;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+.toast-msg.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ===== ③ Share Button in Modal ===== */
+.modal-share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 9px 20px;
+  border-radius: 999px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-family: 'Tajawal', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.modal-share-btn:hover {
+  border-color: var(--gold);
+  color: var(--choco-dark);
+  background: var(--gold-pale);
+  transform: translateY(-2px);
 }
