@@ -3,6 +3,8 @@ import {
   getFirestore,
   collection,
   getDocs,
+  doc,
+  getDoc,
   query,
   where,
   limit,
@@ -65,7 +67,7 @@ function openModal(product, company) {
   productModal.classList.add("active");
   document.body.style.overflow = "hidden";
 
-  // ضيف معرف المنتج للرابط بدون ما تنعاد تحميل الصفحة
+  // أضف معرف المنتج للرابط بدون إعادة تحميل الصفحة
   const url = new URL(location.href);
   url.searchParams.set("product", product.id);
   history.replaceState(null, "", url.toString());
@@ -423,38 +425,7 @@ async function loadMoreProducts() {
   }
 }
 
-/* ===== Deep Link: افتح المنتج مباشرة من الرابط ===== */
-async function checkDeepLink() {
-  const params = new URLSearchParams(location.search);
-  const productId = params.get("product");
-  if (!productId) return;
-
-  // دور على المنتج في كل الشركات
-  try {
-    const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
-    const productRef = doc(db, "products", productId);
-    const productSnap = await getDoc(productRef);
-    if (!productSnap.exists()) return;
-
-    const product = { id: productSnap.id, ...productSnap.data() };
-    const company = getCompanyById(product.companyId);
-
-    // حمّل منتجات الشركة إذا لم تكن محملة
-    if (product.companyId && String(activeCompanyId) !== String(product.companyId)) {
-      await setActiveCompany(product.companyId);
-    }
-
-    // افتح المودال مباشرة
-    openModal(product, company);
-
-    // اسكرول لقسم المنتجات
-    document.getElementById("products")?.scrollIntoView({ behavior: "smooth" });
-  } catch (err) {
-    console.error("Deep link error:", err);
-  }
-}
-
-
+async function setActiveCompany(companyId) {
   activeCompanyId = companyId;
   renderFilters();
   await loadInitialProducts(companyId);
@@ -462,6 +433,33 @@ async function checkDeepLink() {
 
 function rerenderProductsForAuthChange() {
   renderProducts();
+}
+
+/* ===== Deep Link: افتح المنتج مباشرة من الرابط ===== */
+async function checkDeepLink() {
+  const params = new URLSearchParams(location.search);
+  const productId = params.get("product");
+  if (!productId) return;
+
+  try {
+    const productRef = doc(db, "products", productId);
+    const productSnap = await getDoc(productRef);
+    if (!productSnap.exists()) return;
+
+    const product = { id: productSnap.id, ...productSnap.data() };
+
+    // إذا المنتج من شركة مختلفة عن المحملة حالياً، حمّل شركته
+    if (product.companyId && String(activeCompanyId) !== String(product.companyId)) {
+      await setActiveCompany(product.companyId);
+    }
+
+    const company = getCompanyById(product.companyId);
+    openModal(product, company);
+
+    document.getElementById("products")?.scrollIntoView({ behavior: "smooth" });
+  } catch (err) {
+    console.error("Deep link error:", err);
+  }
 }
 
 async function init() {
