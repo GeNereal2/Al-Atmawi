@@ -224,11 +224,56 @@ const CLOUDINARY_CLOUD_NAME = "dooabdkr5";
 const CLOUDINARY_UPLOAD_PRESET = "alatmawi";
 const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
 
+/* =========================
+   Image Compression
+========================= */
+async function compressImage(file, maxWidth = 1200, quality = 0.75) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const img = new Image();
+      img.onload = function () {
+        const canvas = document.createElement("canvas");
+        let w = img.width;
+        let h = img.height;
+
+        // تصغير الأبعاد إذا كانت أكبر من maxWidth
+        if (w > maxWidth) {
+          h = Math.round((h * maxWidth) / w);
+          w = maxWidth;
+        }
+
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+
+        canvas.toBlob(
+          (blob) => {
+            // إذا فشل الضغط أو الصورة أصغر أصلاً، نرجع الأصلية
+            if (!blob || blob.size >= file.size) {
+              resolve(file);
+            } else {
+              resolve(new File([blob], file.name.replace(/\.\w+$/, ".jpg"), { type: "image/jpeg" }));
+            }
+          },
+          "image/jpeg",
+          quality
+        );
+      };
+      img.onerror = () => resolve(file); // fallback
+      img.src = e.target.result;
+    };
+    reader.onerror = () => resolve(file); // fallback
+    reader.readAsDataURL(file);
+  });
+}
+
 async function uploadToCloudinary(file) {
-  // بنقبل كل الصور هنا لأن HEIC تتحول قبل ما توصل هنا
+  // ضغط الصورة قبل الرفع
+  const compressed = await compressImage(file);
 
   const formData = new FormData();
-  formData.append("file", file);
+  formData.append("file", compressed);
   formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
 
   const response = await fetch(CLOUDINARY_UPLOAD_URL, {
