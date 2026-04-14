@@ -235,10 +235,11 @@
       const name = document.getElementById("modalName").textContent;
       const badge = document.getElementById("modalBadge").textContent;
       const text = name + (badge ? " — " + badge : "") + "\nمن Al-Atmawi Sweets 🍫";
+      const shareUrl = location.href; // الرابط الحين فيه ?product=ID تلقائياً
       if (navigator.share) {
-        navigator.share({ title: name, text: text, url: location.href });
+        navigator.share({ title: name, text: text, url: shareUrl });
       } else {
-        navigator.clipboard.writeText(text + "\n" + location.href).then(() => {
+        navigator.clipboard.writeText(text + "\n" + shareUrl).then(() => {
           showToast("✅ تم نسخ رابط المنتج!");
           this.textContent = "✅ تم النسخ";
           setTimeout(() => this.textContent = "🔗 مشاركة المنتج", 2000);
