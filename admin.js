@@ -41,7 +41,6 @@ const auth = getAuth(app);
    Roles
 ========================= */
 const OWNER_ADMIN = "alimohey586@gmail.com";
-const VIEWER_ADMIN = "private@gmail.com";
 const ADMIN_PRODUCTS_PAGE_SIZE = 8;
 
 function getUserRole(user) {
@@ -50,7 +49,6 @@ function getUserRole(user) {
   const email = user.email.toLowerCase();
 
   if (email === OWNER_ADMIN) return "owner";
-  if (email === VIEWER_ADMIN) return "viewer";
 
   return null;
 }
@@ -59,12 +57,8 @@ function isOwner(user) {
   return getUserRole(user) === "owner";
 }
 
-function isViewer(user) {
-  return getUserRole(user) === "viewer";
-}
-
 function isAllowedAdmin(user) {
-  return isOwner(user) || isViewer(user);
+  return isOwner(user);
 }
 
 /* =========================
@@ -351,12 +345,6 @@ function applyPermissionsUI(user) {
   if (isOwner(user)) {
     adminRoleLabel.textContent = "صلاحيتك: أدمن كامل";
     productFormCard.classList.remove("hidden");
-    return;
-  }
-
-  if (isViewer(user)) {
-    adminRoleLabel.textContent = "صلاحيتك: مشاهدة الأسعار فقط";
-    productFormCard.classList.add("hidden");
     return;
   }
 
