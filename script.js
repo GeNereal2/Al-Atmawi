@@ -5,7 +5,10 @@ import {
   getDocs,
   doc,
   getDoc,
-  query
+  query,
+  orderBy,
+  limit,
+  startAfter
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import {
@@ -35,8 +38,10 @@ let currentUser = null;
 let visibleProducts = [];
 let isLoadingProducts = false;
 let hasMoreProducts = false;
-let allProductsDocs = [];
-let productsCursor = 0;
+let lastVisibleDoc = null;
+
+const PRODUCTS_CACHE_KEY = "al-atmawi-products-cache-v1";
+const PRODUCTS_CACHE_MAX_AGE = 2 * 60 * 1000; // دقيقتين
 
 const productModal = document.getElementById("productModal");
 const modalImg = document.getElementById("modalImg");
@@ -97,12 +102,31 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-function sortProductsByCreatedAt(items) {
-  return [...items].sort((a, b) => {
-    const aTime = a.createdAt?.seconds || 0;
-    const bTime = b.createdAt?.seconds || 0;
-    return bTime - aTime;
-  });
+/* ===== Instant-paint cache (sessionStorage) =====
+   يخزن أول صفحة منتجات مؤقتًا عشان تظهر فورًا عند التنقل
+   بينما يتم تحديثها بالخلفية من Firestore. */
+function readProductsCache() {
+  try {
+    const raw = sessionStorage.getItem(PRODUCTS_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || !Array.isArray(parsed.items)) return null;
+    if (Date.now() - parsed.timestamp > PRODUCTS_CACHE_MAX_AGE) return null;
+    return parsed.items;
+  } catch {
+    return null;
+  }
+}
+
+function writeProductsCache(items) {
+  try {
+    sessionStorage.setItem(
+      PRODUCTS_CACHE_KEY,
+      JSON.stringify({ items, timestamp: Date.now() })
+    );
+  } catch {
+    // تجاهل أخطاء تجاوز المساحة المسموحة
+  }
 }
 
 /* ===== Skeleton Loaders ===== */
@@ -202,34 +226,38 @@ function renderProducts() {
 
 async function loadInitialProducts() {
   isLoadingProducts = true;
-  visibleProducts = [];
+  lastVisibleDoc = null;
   hasMoreProducts = false;
-  allProductsDocs = [];
-  productsCursor = 0;
+
+  // رسم فوري من الكاش (إن وجد) بينما نجيب البيانات الحقيقية بالخلفية
+  const cached = readProductsCache();
+  visibleProducts = cached && cached.length ? cached : [];
   renderProducts();
 
   try {
-    const productsQuery = query(collection(db, "products"));
-    const snapshot = await getDocs(productsQuery);
-
-    const loadedProducts = sortProductsByCreatedAt(
-      snapshot.docs.map(docSnap => ({
-        id: docSnap.id,
-        ...docSnap.data()
-      }))
+    const productsQuery = query(
+      collection(db, "products"),
+      orderBy("createdAt", "desc"),
+      limit(PRODUCTS_PAGE_SIZE)
     );
 
-    allProductsDocs = loadedProducts;
-    visibleProducts = loadedProducts.slice(0, PRODUCTS_PAGE_SIZE);
-    productsCursor = visibleProducts.length;
-    hasMoreProducts = productsCursor < allProductsDocs.length;
+    const snapshot = await getDocs(productsQuery);
+
+    const loadedProducts = snapshot.docs.map(docSnap => ({
+      id: docSnap.id,
+      ...docSnap.data()
+    }));
+
+    visibleProducts = loadedProducts;
+    lastVisibleDoc = snapshot.docs[snapshot.docs.length - 1] || null;
+    hasMoreProducts = snapshot.docs.length === PRODUCTS_PAGE_SIZE;
+
+    writeProductsCache(loadedProducts);
   } catch (error) {
     console.error(error);
-    visibleProducts = [];
-    allProductsDocs = [];
-    productsCursor = 0;
-    hasMoreProducts = false;
-    productsGrid.innerHTML = `<div class="empty-message">حدث خطأ أثناء تحميل المنتجات</div>`;
+    if (!visibleProducts.length) {
+      productsGrid.innerHTML = `<div class="empty-message">حدث خطأ أثناء تحميل المنتجات</div>`;
+    }
   } finally {
     isLoadingProducts = false;
     renderProducts();
@@ -243,14 +271,23 @@ async function loadMoreProducts() {
   renderProducts();
 
   try {
-    const nextChunk = allProductsDocs.slice(
-      productsCursor,
-      productsCursor + PRODUCTS_PAGE_SIZE
+    const productsQuery = query(
+      collection(db, "products"),
+      orderBy("createdAt", "desc"),
+      startAfter(lastVisibleDoc),
+      limit(PRODUCTS_PAGE_SIZE)
     );
 
+    const snapshot = await getDocs(productsQuery);
+
+    const nextChunk = snapshot.docs.map(docSnap => ({
+      id: docSnap.id,
+      ...docSnap.data()
+    }));
+
     visibleProducts = [...visibleProducts, ...nextChunk];
-    productsCursor = visibleProducts.length;
-    hasMoreProducts = productsCursor < allProductsDocs.length;
+    lastVisibleDoc = snapshot.docs[snapshot.docs.length - 1] || lastVisibleDoc;
+    hasMoreProducts = snapshot.docs.length === PRODUCTS_PAGE_SIZE;
   } catch (error) {
     console.error(error);
   } finally {
