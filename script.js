@@ -11,11 +11,6 @@ import {
   startAfter
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-import {
-  getAuth,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
 const firebaseConfig = {
   apiKey: "AIzaSyAoxZQ96uziaGETAEWH0BONmgPPUoa-wD8",
   authDomain: "al-atmawi.firebaseapp.com",
@@ -28,13 +23,9 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const auth = getAuth(app);
 
-const OWNER_ADMIN = "alimohey586@gmail.com";
-const VIEWER_ADMIN = "private@gmail.com";
 const PRODUCTS_PAGE_SIZE = 12;
 
-let currentUser = null;
 let visibleProducts = [];
 let isLoadingProducts = false;
 let hasMoreProducts = false;
@@ -55,7 +46,7 @@ function openModal(product) {
   modalImg.alt = product.name || "";
   modalName.textContent = product.name || "";
   modalBadge.textContent = "";
-  if (product.desc && canSeePrices(currentUser)) {
+  if (product.desc) {
     modalDesc.textContent = product.desc;
     modalDesc.style.display = "block";
   } else {
@@ -89,12 +80,6 @@ document.addEventListener("keydown", (e) => {
 const productsGrid = document.getElementById("productsGrid");
 const productsSectionTitle = document.getElementById("productsSectionTitle");
 const productsSectionSubtitle = document.getElementById("productsSectionSubtitle");
-
-function canSeePrices(user) {
-  if (!user || !user.email) return false;
-  const email = user.email.toLowerCase();
-  return email === OWNER_ADMIN || email === VIEWER_ADMIN;
-}
 
 function escapeHtml(text) {
   const div = document.createElement("div");
@@ -185,8 +170,6 @@ function renderProducts() {
     return;
   }
 
-  const showPrices = canSeePrices(currentUser);
-
   productsGrid.innerHTML = `
     ${visibleProducts.map(product => `
         <div class="product-card product-card-clickable" data-product-id="${product.id}">
@@ -200,7 +183,7 @@ function renderProducts() {
           </div>
           <div class="product-content">
             <h4>${escapeHtml(product.name)}</h4>
-            ${showPrices ? `<p>${escapeHtml(product.desc || "")}</p>` : ""}
+            <p>${escapeHtml(product.desc || "")}</p>
           </div>
         </div>
       `).join("")}
@@ -296,10 +279,6 @@ async function loadMoreProducts() {
   }
 }
 
-function rerenderProductsForAuthChange() {
-  renderProducts();
-}
-
 async function checkDeepLink() {
   const params = new URLSearchParams(location.search);
   const productId = params.get("product");
@@ -320,11 +299,6 @@ async function checkDeepLink() {
 }
 
 async function init() {
-  onAuthStateChanged(auth, (user) => {
-    currentUser = user;
-    rerenderProductsForAuthChange();
-  });
-
   await loadInitialProducts();
   await checkDeepLink();
 }
