@@ -70,6 +70,7 @@ let allFilteredProducts = [];
 let adminProductsCursor = 0;
 let adminProductsHasMore = false;
 let adminProductsLoading = false;
+let productSearchTerm = "";
 
 /* Auth */
 const loginBox = document.getElementById("loginBox");
@@ -96,6 +97,7 @@ const productFormTitle = document.getElementById("productFormTitle");
 const productSubmitBtn = document.getElementById("productSubmitBtn");
 const cancelProductEditBtn = document.getElementById("cancelProductEditBtn");
 const adminProductsList = document.getElementById("adminProductsList");
+const adminProductsSearchInput = document.getElementById("adminProductsSearch");
 
 /* =========================
    Confirm Modal
@@ -356,18 +358,28 @@ function applyPermissionsUI(user) {
    Render
 ========================= */
 function renderProductsList() {
-  if (adminProductsLoading && !products.length) {
+  if (adminProductsLoading && !products.length && !productSearchTerm) {
     adminProductsList.innerHTML = `<div class="empty-message">جاري تحميل المنتجات...</div>`;
     return;
   }
 
-  if (!products.length) {
-    adminProductsList.innerHTML = `<div class="empty-message">لا توجد منتجات حاليًا</div>`;
+  const term = productSearchTerm.trim().toLowerCase();
+  const isSearching = term.length > 0;
+
+  // إذا في بحث فعّال، نفلتر على كل المنتجات المحمّلة (مش بس الصفحة الظاهرة حاليًا)
+  const displayedProducts = isSearching
+    ? allFilteredProducts.filter(product => product.name.toLowerCase().includes(term))
+    : products;
+
+  if (!displayedProducts.length) {
+    adminProductsList.innerHTML = isSearching
+      ? `<div class="empty-message">لا توجد نتائج مطابقة لـ "${escapeHtml(productSearchTerm.trim())}"</div>`
+      : `<div class="empty-message">لا توجد منتجات حاليًا</div>`;
     return;
   }
 
   adminProductsList.innerHTML = `
-    ${products.map(product => `
+    ${displayedProducts.map(product => `
         <div class="admin-item admin-item-compact">
           <div class="admin-item-compact-row">
             <div class="admin-item-icon">🍫</div>
@@ -384,7 +396,7 @@ function renderProductsList() {
         </div>
       `).join("")}
 
-    ${adminProductsHasMore ? `
+    ${!isSearching && adminProductsHasMore ? `
       <div class="load-more-wrap">
         <button id="adminLoadMoreProductsBtn" class="btn btn-outline" type="button" ${adminProductsLoading ? "disabled" : ""}>
           ${adminProductsLoading ? "جاري التحميل..." : "عرض المزيد"}
@@ -449,7 +461,7 @@ function updateAdminUI(user) {
 async function startEditProduct(productId) {
   if (!isOwner(auth.currentUser)) return;
 
-  const product = products.find(item => String(item.id) === String(productId));
+  const product = allFilteredProducts.find(item => String(item.id) === String(productId));
   if (!product) return;
 
   productFormTitle.textContent = "جاري التحميل...";
@@ -489,7 +501,7 @@ async function deleteProduct(productId) {
     return;
   }
 
-  const product = products.find(item => String(item.id) === String(productId));
+  const product = allFilteredProducts.find(item => String(item.id) === String(productId));
   if (!product) return;
 
   const confirmed = await showConfirmModal("حذف المنتج", `هل أنت متأكد من حذف المنتج "${product.name}"؟`);
@@ -615,6 +627,13 @@ productForm.addEventListener("submit", async function (e) {
 });
 
 cancelProductEditBtn.addEventListener("click", resetProductForm);
+
+if (adminProductsSearchInput) {
+  adminProductsSearchInput.addEventListener("input", () => {
+    productSearchTerm = adminProductsSearchInput.value;
+    renderProductsList();
+  });
+}
 
 /* =========================
    Data Loading
