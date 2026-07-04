@@ -47,7 +47,7 @@ function openModal(product) {
   modalName.textContent = product.name || "";
   modalBadge.textContent = "";
   if (product.desc) {
-    modalDesc.textContent = product.desc;
+    modalDesc.textContent = "السعر: " + product.desc;
     modalDesc.style.display = "block";
   } else {
     modalDesc.style.display = "none";
@@ -183,7 +183,7 @@ function renderProducts() {
           </div>
           <div class="product-content">
             <h4>${escapeHtml(product.name)}</h4>
-            <p>${escapeHtml(product.desc || "")}</p>
+            ${product.desc ? `<p>السعر: ${escapeHtml(product.desc)}</p>` : ""}
           </div>
         </div>
       `).join("")}
