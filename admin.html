@@ -95,6 +95,15 @@
               </div>
 
               <div class="form-group">
+                <label for="productCategory">نوع المنتج</label>
+                <select id="productCategory" required>
+                  <option value="drinks">مشروبات</option>
+                  <option value="chips">شيبسات</option>
+                  <option value="chocolate">شوكولاتات</option>
+                </select>
+              </div>
+
+              <div class="form-group">
                 <label for="productImageFile">صورة المنتج من الجهاز</label>
                 <input type="file" id="productImageFile" accept=".jpg,.jpeg,.png" />
               </div>
@@ -145,7 +154,7 @@
     </div>
   </div>
 
-  <script type="module" src="admin.js?v=6"></script>
+  <script type="module" src="admin.js?v=7"></script>
   <script>
     /* Confirm Modal Helper */
     window.showConfirmModal = function(title, msg) {
