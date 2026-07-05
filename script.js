@@ -31,7 +31,8 @@ const CATEGORIES = [
   { id: "chocolate", label: "الشوكولاتات", subtitle: "أفخر أنواع الشوكولاتة العالمية", icon: "🍫" },
   { id: "jelly", label: "جلي وجوميات", subtitle: "حلويات جلي وجوميات بأشكال ونكهات متنوعة", icon: "🍬" },
   { id: "marshmallow", label: "المارشميلو", subtitle: "مارشميلو طري بنكهات متنوعة", icon: "☁️" },
-  { id: "toffee", label: "التوفي والملبسات", subtitle: "توفي وملبسات وحلويات كلاسيكية", icon: "🍭" }
+  { id: "toffee", label: "التوفي والملبسات", subtitle: "توفي وملبسات وحلويات كلاسيكية", icon: "🍭" },
+  { id: "bigla", label: "بيجلا", subtitle: "تشكيلة بيجلا المميزة", icon: "🥨" }
 ];
 
 const CATEGORY_IDS = CATEGORIES.map(c => c.id);
