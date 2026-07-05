@@ -28,13 +28,14 @@ const db = getFirestore(app);
 const CATEGORIES = [
   { id: "drinks", label: "المشروبات", subtitle: "تشكيلة من ألذ وأبرد المشروبات", icon: "🥤" },
   { id: "chips", label: "الشيبسات", subtitle: "أشهى أنواع الشيبس والسناكس", icon: "🍟" },
-  { id: "chocolate", label: "الشوكولاتات", subtitle: "أفخر أنواع الشوكولاتة العالمية", icon: "🍫" }
+  { id: "chocolate", label: "الشوكولاتات", subtitle: "أفخر أنواع الشوكولاتة العالمية", icon: "🍫" },
+  { id: "jelly", label: "جلي وجوميات", subtitle: "حلويات جلي وجوميات بأشكال ونكهات متنوعة", icon: "🍬" }
 ];
 
 const CATEGORY_IDS = CATEGORIES.map(c => c.id);
 
 // أي منتج قديم بدون تصنيف (أو بتصنيف غير معروف) بيظهر هون بدل ما يختفي
-const OTHER_CATEGORY = { id: "__other__", label: "أخرى", subtitle: "منتجات بدون تصنيف محدد", icon: "🍬" };
+const OTHER_CATEGORY = { id: "__other__", label: "أخرى", subtitle: "منتجات بدون تصنيف محدد", icon: "❓" };
 
 const PRODUCTS_PER_CATEGORY_STEP = 8;
 
