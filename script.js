@@ -31,6 +31,11 @@ const CATEGORIES = [
   { id: "chocolate", label: "الشوكولاتات", subtitle: "أفخر أنواع الشوكولاتة العالمية", icon: "🍫" }
 ];
 
+const CATEGORY_IDS = CATEGORIES.map(c => c.id);
+
+// أي منتج قديم بدون تصنيف (أو بتصنيف غير معروف) بيظهر هون بدل ما يختفي
+const OTHER_CATEGORY = { id: "__other__", label: "أخرى", subtitle: "منتجات بدون تصنيف محدد", icon: "🍬" };
+
 const PRODUCTS_PER_CATEGORY_STEP = 8;
 
 let allProducts = []; // كل المنتجات المحمّلة من Firestore
@@ -150,7 +155,10 @@ function animateCards(container) {
 }
 
 function getProductsByCategory(categoryId) {
-  return allProducts.filter(p => (p.category || "") === categoryId);
+  if (categoryId === OTHER_CATEGORY.id) {
+    return allProducts.filter(p => !CATEGORY_IDS.includes(p.category));
+  }
+  return allProducts.filter(p => p.category === categoryId);
 }
 
 function renderProductCard(product) {
@@ -206,6 +214,9 @@ function renderCategorySection(category) {
 }
 
 function renderProducts() {
+  const hasOtherItems = getProductsByCategory(OTHER_CATEGORY.id).length > 0;
+  const allSections = hasOtherItems ? [...CATEGORIES, OTHER_CATEGORY] : CATEGORIES;
+
   if (!allProducts.length && isLoadingProducts) {
     productsCategories.innerHTML = CATEGORIES.map(cat => `
       <div class="category-block" data-category="${cat.id}">
@@ -219,7 +230,7 @@ function renderProducts() {
     return;
   }
 
-  const sectionsHtml = CATEGORIES.map(renderCategorySection).filter(Boolean).join("");
+  const sectionsHtml = allSections.map(renderCategorySection).filter(Boolean).join("");
 
   if (!sectionsHtml) {
     productsCategories.innerHTML = `<div class="empty-message">لا توجد منتجات حاليًا</div>`;
