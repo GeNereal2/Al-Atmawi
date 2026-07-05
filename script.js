@@ -29,7 +29,9 @@ const CATEGORIES = [
   { id: "drinks", label: "المشروبات", subtitle: "تشكيلة من ألذ وأبرد المشروبات", icon: "🥤" },
   { id: "chips", label: "الشيبسات", subtitle: "أشهى أنواع الشيبس والسناكس", icon: "🍟" },
   { id: "chocolate", label: "الشوكولاتات", subtitle: "أفخر أنواع الشوكولاتة العالمية", icon: "🍫" },
-  { id: "jelly", label: "جلي وجوميات", subtitle: "حلويات جلي وجوميات بأشكال ونكهات متنوعة", icon: "🍬" }
+  { id: "jelly", label: "جلي وجوميات", subtitle: "حلويات جلي وجوميات بأشكال ونكهات متنوعة", icon: "🍬" },
+  { id: "marshmallow", label: "المارشميلو", subtitle: "مارشميلو طري بنكهات متنوعة", icon: "☁️" },
+  { id: "toffee", label: "التوفي والملبسات", subtitle: "توفي وملبسات وحلويات كلاسيكية", icon: "🍭" }
 ];
 
 const CATEGORY_IDS = CATEGORIES.map(c => c.id);
