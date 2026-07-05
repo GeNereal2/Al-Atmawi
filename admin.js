@@ -151,7 +151,9 @@ const CATEGORY_LABELS = {
   drinks: { label: "مشروبات", icon: "🥤" },
   chips: { label: "شيبسات", icon: "🍟" },
   chocolate: { label: "شوكولاتات", icon: "🍫" },
-  jelly: { label: "جلي وجوميات", icon: "🍬" }
+  jelly: { label: "جلي وجوميات", icon: "🍬" },
+  marshmallow: { label: "مارشميلو", icon: "☁️" },
+  toffee: { label: "توفي وملبسات", icon: "🍭" }
 };
 
 function getCategoryInfo(category) {
