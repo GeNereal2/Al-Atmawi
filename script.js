@@ -6,9 +6,7 @@ import {
   doc,
   getDoc,
   query,
-  orderBy,
-  limit,
-  startAfter
+  orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -24,14 +22,22 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const PRODUCTS_PAGE_SIZE = 12;
+/* =========================
+   Categories
+========================= */
+const CATEGORIES = [
+  { id: "drinks", label: "المشروبات", subtitle: "تشكيلة من ألذ وأبرد المشروبات", icon: "🥤" },
+  { id: "chips", label: "الشيبسات", subtitle: "أشهى أنواع الشيبس والسناكس", icon: "🍟" },
+  { id: "chocolate", label: "الشوكولاتات", subtitle: "أفخر أنواع الشوكولاتة العالمية", icon: "🍫" }
+];
 
-let visibleProducts = [];
+const PRODUCTS_PER_CATEGORY_STEP = 8;
+
+let allProducts = []; // كل المنتجات المحمّلة من Firestore
 let isLoadingProducts = false;
-let hasMoreProducts = false;
-let lastVisibleDoc = null;
+let revealCounts = {}; // كم منتج ظاهر حاليًا لكل تصنيف
 
-const PRODUCTS_CACHE_KEY = "al-atmawi-products-cache-v1";
+const PRODUCTS_CACHE_KEY = "al-atmawi-products-cache-v2";
 const PRODUCTS_CACHE_MAX_AGE = 2 * 60 * 1000; // دقيقتين
 
 const productModal = document.getElementById("productModal");
@@ -77,9 +83,7 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closeModal();
 });
 
-const productsGrid = document.getElementById("productsGrid");
-const productsSectionTitle = document.getElementById("productsSectionTitle");
-const productsSectionSubtitle = document.getElementById("productsSectionSubtitle");
+const productsCategories = document.getElementById("productsCategories");
 
 function escapeHtml(text) {
   const div = document.createElement("div");
@@ -88,7 +92,7 @@ function escapeHtml(text) {
 }
 
 /* ===== Instant-paint cache (sessionStorage) =====
-   يخزن أول صفحة منتجات مؤقتًا عشان تظهر فورًا عند التنقل
+   يخزن المنتجات مؤقتًا عشان تظهر فورًا عند التنقل
    بينما يتم تحديثها بالخلفية من Firestore. */
 function readProductsCache() {
   try {
@@ -115,7 +119,7 @@ function writeProductsCache(items) {
 }
 
 /* ===== Skeleton Loaders ===== */
-function getProductSkeletons(count = 8) {
+function getProductSkeletons(count = 4) {
   return Array.from({ length: count }, () => `
     <div class="product-card skeleton-card">
       <div class="skeleton-product-image"></div>
@@ -129,8 +133,8 @@ function getProductSkeletons(count = 8) {
 }
 
 /* ===== Animate cards on appear ===== */
-function animateCards(selector) {
-  const cards = document.querySelectorAll(selector);
+function animateCards(container) {
+  const cards = container.querySelectorAll(".product-card:not(.skeleton-card)");
   cards.forEach((card, i) => {
     card.style.opacity = "0";
     card.style.transform = "translateY(20px)";
@@ -145,83 +149,120 @@ function animateCards(selector) {
   });
 }
 
-function getLoadMoreButtonHtml() {
-  if (!visibleProducts.length || !hasMoreProducts) return "";
+function getProductsByCategory(categoryId) {
+  return allProducts.filter(p => (p.category || "") === categoryId);
+}
+
+function renderProductCard(product) {
   return `
-    <div class="load-more-wrap">
-      <button id="loadMoreBtn" class="btn btn-outline" type="button" ${isLoadingProducts ? "disabled" : ""}>
-        ${isLoadingProducts ? "جاري التحميل..." : "عرض المزيد"}
-      </button>
+    <div class="product-card product-card-clickable" data-product-id="${product.id}">
+      <div class="product-image">
+        <img
+          src="${escapeHtml(product.image || "")}"
+          alt="${escapeHtml(product.name)}"
+          loading="lazy"
+          decoding="async"
+        >
+      </div>
+      <div class="product-content">
+        <h4>${escapeHtml(product.name)}</h4>
+        ${product.desc ? `<p>السعر: ${escapeHtml(product.desc)}</p>` : ""}
+      </div>
+    </div>
+  `;
+}
+
+function renderCategorySection(category) {
+  const items = getProductsByCategory(category.id);
+
+  if (!items.length && !isLoadingProducts) return "";
+
+  const revealed = revealCounts[category.id] || PRODUCTS_PER_CATEGORY_STEP;
+  const visibleItems = items.slice(0, revealed);
+  const hasMore = items.length > revealed;
+
+  const gridHtml = !items.length && isLoadingProducts
+    ? getProductSkeletons(4)
+    : visibleItems.map(renderProductCard).join("");
+
+  return `
+    <div class="category-block" data-category="${category.id}">
+      <div class="category-header">
+        <h3><span class="category-icon">${category.icon}</span> ${escapeHtml(category.label)}</h3>
+        <p>${escapeHtml(category.subtitle)}</p>
+      </div>
+      <div class="products-grid" data-category-grid="${category.id}">
+        ${gridHtml}
+      </div>
+      ${hasMore ? `
+        <div class="load-more-wrap">
+          <button class="btn btn-outline category-load-more" data-category-more="${category.id}" type="button">
+            عرض المزيد
+          </button>
+        </div>
+      ` : ""}
     </div>
   `;
 }
 
 function renderProducts() {
-  productsSectionTitle.textContent = "كل المنتجات";
-  productsSectionSubtitle.textContent = "استعرض جميع منتجاتنا";
-
-  if (!visibleProducts.length && isLoadingProducts) {
-    productsGrid.innerHTML = getProductSkeletons(8);
-    return;
-  }
-
-  if (!visibleProducts.length) {
-    productsGrid.innerHTML = `<div class="empty-message">لا توجد منتجات حاليًا</div>`;
-    return;
-  }
-
-  productsGrid.innerHTML = `
-    ${visibleProducts.map(product => `
-        <div class="product-card product-card-clickable" data-product-id="${product.id}">
-          <div class="product-image">
-            <img
-              src="${escapeHtml(product.image || "")}"
-              alt="${escapeHtml(product.name)}"
-              loading="lazy"
-              decoding="async"
-            >
-          </div>
-          <div class="product-content">
-            <h4>${escapeHtml(product.name)}</h4>
-            ${product.desc ? `<p>السعر: ${escapeHtml(product.desc)}</p>` : ""}
-          </div>
+  if (!allProducts.length && isLoadingProducts) {
+    productsCategories.innerHTML = CATEGORIES.map(cat => `
+      <div class="category-block" data-category="${cat.id}">
+        <div class="category-header">
+          <h3><span class="category-icon">${cat.icon}</span> ${escapeHtml(cat.label)}</h3>
+          <p>${escapeHtml(cat.subtitle)}</p>
         </div>
-      `).join("")}
-    ${getLoadMoreButtonHtml()}
-  `;
+        <div class="products-grid">${getProductSkeletons(4)}</div>
+      </div>
+    `).join("");
+    return;
+  }
 
-  animateCards(".product-card:not(.skeleton-card)");
+  const sectionsHtml = CATEGORIES.map(renderCategorySection).filter(Boolean).join("");
 
-  document.querySelectorAll(".product-card-clickable").forEach(card => {
+  if (!sectionsHtml) {
+    productsCategories.innerHTML = `<div class="empty-message">لا توجد منتجات حاليًا</div>`;
+    return;
+  }
+
+  productsCategories.innerHTML = sectionsHtml;
+
+  productsCategories.querySelectorAll(".category-block").forEach(block => {
+    animateCards(block);
+  });
+
+  productsCategories.querySelectorAll(".product-card-clickable").forEach(card => {
     card.addEventListener("click", () => {
       const productId = card.dataset.productId;
-      const product = visibleProducts.find(p => p.id === productId);
+      const product = allProducts.find(p => p.id === productId);
       if (!product) return;
       openModal(product);
     });
   });
 
-  const loadMoreBtn = document.getElementById("loadMoreBtn");
-  if (loadMoreBtn) {
-    loadMoreBtn.addEventListener("click", loadMoreProducts);
-  }
+  productsCategories.querySelectorAll("[data-category-more]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const categoryId = btn.dataset.categoryMore;
+      revealCounts[categoryId] = (revealCounts[categoryId] || PRODUCTS_PER_CATEGORY_STEP) + PRODUCTS_PER_CATEGORY_STEP;
+      renderProducts();
+    });
+  });
 }
 
 async function loadInitialProducts() {
   isLoadingProducts = true;
-  lastVisibleDoc = null;
-  hasMoreProducts = false;
+  revealCounts = {};
 
   // رسم فوري من الكاش (إن وجد) بينما نجيب البيانات الحقيقية بالخلفية
   const cached = readProductsCache();
-  visibleProducts = cached && cached.length ? cached : [];
+  allProducts = cached && cached.length ? cached : [];
   renderProducts();
 
   try {
     const productsQuery = query(
       collection(db, "products"),
-      orderBy("createdAt", "desc"),
-      limit(PRODUCTS_PAGE_SIZE)
+      orderBy("createdAt", "desc")
     );
 
     const snapshot = await getDocs(productsQuery);
@@ -231,48 +272,13 @@ async function loadInitialProducts() {
       ...docSnap.data()
     }));
 
-    visibleProducts = loadedProducts;
-    lastVisibleDoc = snapshot.docs[snapshot.docs.length - 1] || null;
-    hasMoreProducts = snapshot.docs.length === PRODUCTS_PAGE_SIZE;
-
+    allProducts = loadedProducts;
     writeProductsCache(loadedProducts);
   } catch (error) {
     console.error(error);
-    if (!visibleProducts.length) {
-      productsGrid.innerHTML = `<div class="empty-message">حدث خطأ أثناء تحميل المنتجات</div>`;
+    if (!allProducts.length) {
+      productsCategories.innerHTML = `<div class="empty-message">حدث خطأ أثناء تحميل المنتجات</div>`;
     }
-  } finally {
-    isLoadingProducts = false;
-    renderProducts();
-  }
-}
-
-async function loadMoreProducts() {
-  if (isLoadingProducts || !hasMoreProducts) return;
-
-  isLoadingProducts = true;
-  renderProducts();
-
-  try {
-    const productsQuery = query(
-      collection(db, "products"),
-      orderBy("createdAt", "desc"),
-      startAfter(lastVisibleDoc),
-      limit(PRODUCTS_PAGE_SIZE)
-    );
-
-    const snapshot = await getDocs(productsQuery);
-
-    const nextChunk = snapshot.docs.map(docSnap => ({
-      id: docSnap.id,
-      ...docSnap.data()
-    }));
-
-    visibleProducts = [...visibleProducts, ...nextChunk];
-    lastVisibleDoc = snapshot.docs[snapshot.docs.length - 1] || lastVisibleDoc;
-    hasMoreProducts = snapshot.docs.length === PRODUCTS_PAGE_SIZE;
-  } catch (error) {
-    console.error(error);
   } finally {
     isLoadingProducts = false;
     renderProducts();
