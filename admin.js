@@ -89,6 +89,7 @@ const productForm = document.getElementById("productForm");
 const productIdInput = document.getElementById("productId");
 const productNameInput = document.getElementById("productName");
 const productDescInput = document.getElementById("productDesc");
+const productCategoryInput = document.getElementById("productCategory");
 const productImageInput = document.getElementById("productImage");
 const productImageFileInput = document.getElementById("productImageFile");
 const productImageDataInput = document.getElementById("productImageData");
@@ -141,6 +142,19 @@ function escapeHtml(text) {
   const div = document.createElement("div");
   div.textContent = text ?? "";
   return div.innerHTML;
+}
+
+/* =========================
+   Categories
+========================= */
+const CATEGORY_LABELS = {
+  drinks: { label: "مشروبات", icon: "🥤" },
+  chips: { label: "شيبسات", icon: "🍟" },
+  chocolate: { label: "شوكولاتات", icon: "🍫" }
+};
+
+function getCategoryInfo(category) {
+  return CATEGORY_LABELS[category] || { label: "غير مصنف", icon: "🍬" };
 }
 
 function sortByCreatedAtDesc(items) {
@@ -332,6 +346,7 @@ function updatePreviewFromUrl(url, previewElement, hiddenInput) {
 function resetProductForm() {
   productForm.reset();
   productIdInput.value = "";
+  productCategoryInput.value = "drinks";
   productImageDataInput.value = "";
   productPreview.src = "";
   productPreview.classList.add("hidden");
@@ -382,9 +397,10 @@ function renderProductsList() {
     ${displayedProducts.map(product => `
         <div class="admin-item admin-item-compact">
           <div class="admin-item-compact-row">
-            <div class="admin-item-icon">🍫</div>
+            <div class="admin-item-icon">${getCategoryInfo(product.category).icon}</div>
             <div class="admin-item-info">
               <h4>${escapeHtml(product.name)}</h4>
+              <span class="admin-item-category">${escapeHtml(getCategoryInfo(product.category).label)}</span>
             </div>
             ${isOwner(auth.currentUser) ? `
               <div class="admin-item-actions-inline">
@@ -477,6 +493,7 @@ async function startEditProduct(productId) {
     productIdInput.value = product.id;
     productNameInput.value = product.name;
     productDescInput.value = product.desc;
+    productCategoryInput.value = product.category || "drinks";
     productImageInput.value = String(image).startsWith("data:") ? "" : image;
     productImageDataInput.value = String(image).startsWith("data:") ? image : "";
     productPreview.src = image;
@@ -590,10 +607,11 @@ productForm.addEventListener("submit", async function (e) {
   const id = productIdInput.value.trim();
   const name = productNameInput.value.trim();
   const desc = productDescInput.value.trim();
+  const category = productCategoryInput.value.trim();
   const image = productImageDataInput.value.trim() || productImageInput.value.trim();
   // productImageDataInput الآن يحمل رابط Cloudinary بدل base64
 
-  if (!name || !desc || !image) {
+  if (!name || !desc || !category || !image) {
     showMessage(productForm, "يرجى تعبئة جميع الحقول مع الصورة", "error");
     return;
   }
@@ -603,6 +621,7 @@ productForm.addEventListener("submit", async function (e) {
       await updateDoc(doc(db, "products", id), {
         name,
         desc,
+        category,
         image,
         updatedAt: serverTimestamp()
       });
@@ -611,6 +630,7 @@ productForm.addEventListener("submit", async function (e) {
       await addDoc(collection(db, "products"), {
         name,
         desc,
+        category,
         image,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
@@ -663,6 +683,7 @@ async function loadInitialAdminProducts() {
         id: docSnap.id,
         name: d.name || "",
         desc: d.desc || "",
+        category: d.category || "",
         createdAt: d.createdAt || null,
         // image محذوف من القائمة لتخفيف التحميل
         _hasImage: !!d.image
