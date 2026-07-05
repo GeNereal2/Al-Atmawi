@@ -150,11 +150,12 @@ function escapeHtml(text) {
 const CATEGORY_LABELS = {
   drinks: { label: "مشروبات", icon: "🥤" },
   chips: { label: "شيبسات", icon: "🍟" },
-  chocolate: { label: "شوكولاتات", icon: "🍫" }
+  chocolate: { label: "شوكولاتات", icon: "🍫" },
+  jelly: { label: "جلي وجوميات", icon: "🍬" }
 };
 
 function getCategoryInfo(category) {
-  return CATEGORY_LABELS[category] || { label: "غير مصنف", icon: "🍬" };
+  return CATEGORY_LABELS[category] || { label: "غير مصنف", icon: "❓" };
 }
 
 function sortByCreatedAtDesc(items) {
@@ -409,6 +410,18 @@ function renderProductsList() {
               </div>
             ` : ""}
           </div>
+          ${isOwner(auth.currentUser) ? `
+            <div class="admin-quick-categories">
+              ${Object.entries(CATEGORY_LABELS).map(([catId, info]) => `
+                <button
+                  type="button"
+                  class="quick-cat-btn ${product.category === catId ? "active" : ""}"
+                  data-quick-category="${catId}"
+                  data-quick-category-product="${product.id}"
+                >${info.icon} ${info.label}</button>
+              `).join("")}
+            </div>
+          ` : ""}
         </div>
       `).join("")}
 
@@ -429,11 +442,47 @@ function renderProductsList() {
     document.querySelectorAll("[data-product-delete]").forEach(btn => {
       btn.addEventListener("click", () => deleteProduct(btn.dataset.productDelete));
     });
+
+    document.querySelectorAll("[data-quick-category]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        quickSetCategory(btn.dataset.quickCategoryProduct, btn.dataset.quickCategory);
+      });
+    });
   }
 
   const loadMoreBtn = document.getElementById("adminLoadMoreProductsBtn");
   if (loadMoreBtn) {
     loadMoreBtn.addEventListener("click", loadMoreAdminProducts);
+  }
+}
+
+/* =========================
+   Quick Category Assign
+========================= */
+async function quickSetCategory(productId, category) {
+  if (!isOwner(auth.currentUser)) return;
+  if (!CATEGORY_LABELS[category]) return;
+
+  const btnsForProduct = document.querySelectorAll(`[data-quick-category-product="${productId}"]`);
+  btnsForProduct.forEach(b => (b.disabled = true));
+
+  try {
+    await updateDoc(doc(db, "products", productId), {
+      category,
+      updatedAt: serverTimestamp()
+    });
+
+    // تحديث محلي فوري بدون إعادة تحميل كل القائمة
+    [products, allFilteredProducts].forEach(list => {
+      const item = list.find(p => String(p.id) === String(productId));
+      if (item) item.category = category;
+    });
+
+    renderProductsList();
+  } catch (error) {
+    console.error(error);
+    alert("حدث خطأ أثناء تحديث التصنيف");
+    btnsForProduct.forEach(b => (b.disabled = false));
   }
 }
 
