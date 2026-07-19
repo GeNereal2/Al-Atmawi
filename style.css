@@ -631,6 +631,49 @@ footer {
   flex-wrap:wrap;
 }
 .footer-logo { font-family:'Playfair Display',serif; color:var(--gold-light); font-size:1.1rem; font-weight:700; }
+.private-login-link {
+  background:none;
+  border:none;
+  color:rgba(248,232,226,0.35);
+  font-size:0.78rem;
+  cursor:pointer;
+  padding:4px 8px;
+  transition:var(--transition);
+}
+.private-login-link:hover { color:rgba(248,232,226,0.7); }
+
+.private-banner {
+  position:fixed;
+  bottom:16px;
+  inset-inline-start:16px;
+  z-index:500;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  background:linear-gradient(135deg,var(--choco-dark),var(--choco));
+  color:#fff;
+  padding:12px 18px;
+  border-radius:999px;
+  box-shadow:0 12px 30px rgba(0,0,0,0.3);
+  border:1px solid rgba(201,151,62,0.4);
+  font-size:0.88rem;
+  font-weight:700;
+}
+.private-banner button {
+  background:var(--gold);
+  color:var(--choco-dark);
+  border:none;
+  padding:6px 14px;
+  border-radius:999px;
+  font-weight:800;
+  font-size:0.8rem;
+  cursor:pointer;
+  transition:var(--transition);
+}
+.private-banner button:hover { background:var(--gold-light); }
+@media (max-width:600px) {
+  .private-banner { inset-inline:16px; justify-content:space-between; }
+}
 
 /* Skeleton */
 @keyframes shimmer {
