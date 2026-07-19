@@ -89,6 +89,7 @@ const productForm = document.getElementById("productForm");
 const productIdInput = document.getElementById("productId");
 const productNameInput = document.getElementById("productName");
 const productDescInput = document.getElementById("productDesc");
+const productListingTypeInput = document.getElementById("productListingType");
 const productCategoryInput = document.getElementById("productCategory");
 const productImageInput = document.getElementById("productImage");
 const productImageFileInput = document.getElementById("productImageFile");
@@ -350,6 +351,7 @@ function updatePreviewFromUrl(url, previewElement, hiddenInput) {
 function resetProductForm() {
   productForm.reset();
   productIdInput.value = "";
+  productListingTypeInput.value = "normal";
   productCategoryInput.value = "drinks";
   productImageDataInput.value = "";
   productPreview.src = "";
@@ -405,6 +407,7 @@ function renderProductsList() {
             <div class="admin-item-info">
               <h4>${escapeHtml(product.name)}</h4>
               <span class="admin-item-category">${escapeHtml(getCategoryInfo(product.category).label)}</span>
+              ${product.isOffer ? `<span class="admin-item-offer-badge">🔥 عرض خاص</span>` : ""}
             </div>
             ${isOwner(auth.currentUser) ? `
               <div class="admin-item-actions-inline">
@@ -545,6 +548,7 @@ async function startEditProduct(productId) {
     productIdInput.value = product.id;
     productNameInput.value = product.name;
     productDescInput.value = product.desc;
+    productListingTypeInput.value = product.isOffer ? "offer" : "normal";
     productCategoryInput.value = product.category || "drinks";
     productImageInput.value = String(image).startsWith("data:") ? "" : image;
     productImageDataInput.value = String(image).startsWith("data:") ? image : "";
@@ -659,6 +663,7 @@ productForm.addEventListener("submit", async function (e) {
   const id = productIdInput.value.trim();
   const name = productNameInput.value.trim();
   const desc = productDescInput.value.trim();
+  const isOffer = productListingTypeInput.value === "offer";
   const category = productCategoryInput.value.trim();
   const image = productImageDataInput.value.trim() || productImageInput.value.trim();
   // productImageDataInput الآن يحمل رابط Cloudinary بدل base64
@@ -674,6 +679,7 @@ productForm.addEventListener("submit", async function (e) {
         name,
         desc,
         category,
+        isOffer,
         image,
         updatedAt: serverTimestamp()
       });
@@ -683,6 +689,7 @@ productForm.addEventListener("submit", async function (e) {
         name,
         desc,
         category,
+        isOffer,
         image,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
@@ -736,6 +743,7 @@ async function loadInitialAdminProducts() {
         name: d.name || "",
         desc: d.desc || "",
         category: d.category || "",
+        isOffer: !!d.isOffer,
         createdAt: d.createdAt || null,
         // image محذوف من القائمة لتخفيف التحميل
         _hasImage: !!d.image
