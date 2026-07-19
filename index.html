@@ -9,6 +9,22 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Al-Atmawi" />
+
+  <!-- Open Graph / Facebook / WhatsApp Preview -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://genereal2.github.io/Al-Atmawi/index.html" />
+  <meta property="og:title" content="العتماوي للسكاكر والحلويات | Al-Atmawi Sweets" />
+  <meta property="og:description" content="أجود أنواع الشوكولاتة والسكاكر والمشروبات من أشهر الشركات العالمية" />
+  <meta property="og:image" content="https://genereal2.github.io/Al-Atmawi/og-image.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale" content="ar_AR" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="العتماوي للسكاكر والحلويات | Al-Atmawi Sweets" />
+  <meta name="twitter:description" content="أجود أنواع الشوكولاتة والسكاكر والمشروبات من أشهر الشركات العالمية" />
+  <meta name="twitter:image" content="https://genereal2.github.io/Al-Atmawi/og-image.jpg" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icon-192.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,6 +41,7 @@
       <nav>
         <ul class="nav-links">
           <li><a href="#home">الرئيسية</a></li>
+          <li><a href="#offers" class="offers-nav-link">🔥 العروض</a></li>
           <li><a href="#products">المنتجات</a></li>
           <li><a href="#about">من نحن</a></li>
           <li><a href="#contact">تواصل معنا</a></li>
@@ -34,6 +51,18 @@
       <button id="themeToggleBtn" class="theme-toggle-btn" type="button" title="تبديل الوضع">🌙</button>
     </div>
   </header>
+
+  <!-- ===== Offers ===== -->
+  <section class="offers-section hidden" id="offers">
+    <div class="container">
+      <div class="offers-header">
+        <span class="offers-badge">🔥 لفترة محدودة</span>
+        <h2>عروضنا الخاصة</h2>
+        <p>أقوى العروض والأسعار المميزة من Al-Atmawi Sweets</p>
+      </div>
+      <div id="offersGrid" class="offers-grid"></div>
+    </div>
+  </section>
 
   <!-- ===== Hero ===== -->
   <section class="hero" id="home">
@@ -148,7 +177,7 @@
 
   <div id="toastMsg" class="toast-msg"></div>
 
-  <script type="module" src="script.js?v=13"></script>
+  <script type="module" src="script.js?v=14"></script>
   <script>
     /* Animated Counters */
     function animateCounter(el, target) {
