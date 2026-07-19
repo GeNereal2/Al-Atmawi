@@ -95,6 +95,11 @@
               </div>
 
               <div class="form-group">
+                <label for="productPrivatePrice">السعر الخاص (يظهر فقط لحساب العميل المميز)</label>
+                <input type="text" id="productPrivatePrice" placeholder="اختياري - اتركه فارغ إذا ما في سعر خاص لهذا المنتج" />
+              </div>
+
+              <div class="form-group">
                 <label for="productListingType">مكان عرض المنتج</label>
                 <select id="productListingType" required>
                   <option value="normal">منتج عادي (يظهر ضمن قسم المنتجات)</option>
@@ -166,7 +171,7 @@
     </div>
   </div>
 
-  <script type="module" src="admin.js?v=12"></script>
+  <script type="module" src="admin.js?v=13"></script>
   <script>
     /* Confirm Modal Helper */
     window.showConfirmModal = function(title, msg) {
