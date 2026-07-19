@@ -52,18 +52,6 @@
     </div>
   </header>
 
-  <!-- ===== Offers ===== -->
-  <section class="offers-section hidden" id="offers">
-    <div class="container">
-      <div class="offers-header">
-        <span class="offers-badge">🔥 لفترة محدودة</span>
-        <h2>عروضنا الخاصة</h2>
-        <p>أقوى العروض والأسعار المميزة من Al-Atmawi Sweets</p>
-      </div>
-      <div id="offersGrid" class="offers-grid"></div>
-    </div>
-  </section>
-
   <!-- ===== Hero ===== -->
   <section class="hero" id="home">
     <div class="container">
@@ -90,6 +78,18 @@
     </div>
   </section>
 
+  <!-- ===== Offers ===== -->
+  <section class="offers-section hidden" id="offers">
+    <div class="container">
+      <div class="offers-header">
+        <span class="offers-badge">🔥 لفترة محدودة</span>
+        <h2>عروضنا الخاصة</h2>
+        <p>أقوى العروض والأسعار المميزة من Al-Atmawi Sweets</p>
+      </div>
+      <div id="offersGrid" class="offers-grid"></div>
+    </div>
+  </section>
+
   <!-- ===== Products ===== -->
   <section class="section" id="products">
     <div class="container">
@@ -100,6 +100,7 @@
       <div id="productsCategories"></div>
     </div>
   </section>
+
 
   <!-- ===== About ===== -->
   <section class="section" id="about">
@@ -156,8 +157,37 @@
     <div class="container footer-content">
       <div class="footer-logo">Al-Atmawi Sweets</div>
       <p>CopyRight © Al-Atmawi Sweets 2026</p>
+      <button id="privateLoginLink" class="private-login-link" type="button">🔒 دخول خاص</button>
     </div>
   </footer>
+
+  <!-- Private Pricing Banner -->
+  <div id="privateBanner" class="private-banner hidden">
+    <span>🔒 أنت تشاهد الأسعار الخاصة</span>
+    <button id="privateLogoutBtn" type="button">تسجيل خروج</button>
+  </div>
+
+  <!-- Private Login Modal -->
+  <div class="modal-overlay" id="privateLoginModal">
+    <div class="modal-box" style="max-width:400px">
+      <button class="modal-close" id="privateLoginCloseBtn" type="button">✕</button>
+      <div class="modal-info" style="padding:36px 32px">
+        <h3 style="margin-bottom:20px">دخول خاص</h3>
+        <form id="privateLoginForm" class="admin-form single-column">
+          <div class="form-group">
+            <label for="privateLoginEmail">البريد الإلكتروني</label>
+            <input type="email" id="privateLoginEmail" required placeholder="example@email.com" />
+          </div>
+          <div class="form-group">
+            <label for="privateLoginPassword">كلمة المرور</label>
+            <input type="password" id="privateLoginPassword" required placeholder="••••••••" />
+          </div>
+          <p id="privateLoginError" class="error-message hidden"></p>
+          <button type="submit" class="btn btn-primary full-btn">دخول</button>
+        </form>
+      </div>
+    </div>
+  </div>
 
   <!-- Modal -->
   <div class="modal-overlay" id="productModal">
@@ -177,7 +207,7 @@
 
   <div id="toastMsg" class="toast-msg"></div>
 
-  <script type="module" src="script.js?v=14"></script>
+  <script type="module" src="script.js?v=16"></script>
   <script>
     /* Animated Counters */
     function animateCounter(el, target) {
