@@ -3,6 +3,7 @@ import {
   getFirestore,
   collection,
   addDoc,
+  setDoc,
   updateDoc,
   deleteDoc,
   doc,
@@ -89,6 +90,7 @@ const productForm = document.getElementById("productForm");
 const productIdInput = document.getElementById("productId");
 const productNameInput = document.getElementById("productName");
 const productDescInput = document.getElementById("productDesc");
+const productPrivatePriceInput = document.getElementById("productPrivatePrice");
 const productListingTypeInput = document.getElementById("productListingType");
 const productCategoryInput = document.getElementById("productCategory");
 const productImageInput = document.getElementById("productImage");
@@ -351,6 +353,7 @@ function updatePreviewFromUrl(url, previewElement, hiddenInput) {
 function resetProductForm() {
   productForm.reset();
   productIdInput.value = "";
+  productPrivatePriceInput.value = "";
   productListingTypeInput.value = "normal";
   productCategoryInput.value = "drinks";
   productImageDataInput.value = "";
@@ -545,9 +548,19 @@ async function startEditProduct(productId) {
     const fullData = docSnap.exists() ? docSnap.data() : {};
     const image = fullData.image || "";
 
+    // السعر الخاص محفوظ بمجموعة منفصلة (privatePricing) عشان ما يظهرش للعموم
+    let privatePriceValue = "";
+    try {
+      const privateSnap = await getDoc(doc(db, "privatePricing", productId));
+      if (privateSnap.exists()) privatePriceValue = privateSnap.data().price || "";
+    } catch (privateError) {
+      console.error(privateError);
+    }
+
     productIdInput.value = product.id;
     productNameInput.value = product.name;
     productDescInput.value = product.desc;
+    productPrivatePriceInput.value = privatePriceValue;
     productListingTypeInput.value = product.isOffer ? "offer" : "normal";
     productCategoryInput.value = product.category || "drinks";
     productImageInput.value = String(image).startsWith("data:") ? "" : image;
@@ -582,6 +595,7 @@ async function deleteProduct(productId) {
 
   try {
     await deleteDoc(doc(db, "products", productId));
+    await deleteDoc(doc(db, "privatePricing", productId)).catch(() => {});
 
     if (String(productIdInput.value) === String(productId)) resetProductForm();
 
@@ -663,6 +677,7 @@ productForm.addEventListener("submit", async function (e) {
   const id = productIdInput.value.trim();
   const name = productNameInput.value.trim();
   const desc = productDescInput.value.trim();
+  const privatePrice = productPrivatePriceInput.value.trim();
   const isOffer = productListingTypeInput.value === "offer";
   const category = productCategoryInput.value.trim();
   const image = productImageDataInput.value.trim() || productImageInput.value.trim();
@@ -674,6 +689,8 @@ productForm.addEventListener("submit", async function (e) {
   }
 
   try {
+    let productId = id;
+
     if (id) {
       await updateDoc(doc(db, "products", id), {
         name,
@@ -685,7 +702,7 @@ productForm.addEventListener("submit", async function (e) {
       });
       showMessage(productForm, "تم تعديل المنتج بنجاح", "success");
     } else {
-      await addDoc(collection(db, "products"), {
+      const newDocRef = await addDoc(collection(db, "products"), {
         name,
         desc,
         category,
@@ -694,7 +711,18 @@ productForm.addEventListener("submit", async function (e) {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
+      productId = newDocRef.id;
       showMessage(productForm, "تمت إضافة المنتج بنجاح", "success");
+    }
+
+    // السعر الخاص بينحفظ بمجموعة منفصلة محمية (privatePricing) عشان ما يظهرش للزوار العاديين
+    if (privatePrice) {
+      await setDoc(doc(db, "privatePricing", productId), {
+        price: privatePrice,
+        updatedAt: serverTimestamp()
+      });
+    } else {
+      await deleteDoc(doc(db, "privatePricing", productId)).catch(() => {});
     }
 
     resetProductForm();
