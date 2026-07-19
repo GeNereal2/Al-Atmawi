@@ -8,6 +8,12 @@ import {
   query,
   orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAoxZQ96uziaGETAEWH0BONmgPPUoa-wD8",
@@ -21,6 +27,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
 /* =========================
    Categories
@@ -46,6 +53,97 @@ let allProducts = []; // كل المنتجات المحمّلة من Firestore
 let isLoadingProducts = false;
 let revealCounts = {}; // كم منتج ظاهر حاليًا لكل تصنيف
 
+/* =========================
+   Private Pricing (حساب العميل المميز)
+========================= */
+const PRIVATE_VIEWER_EMAIL = "private@gmail.com";
+let isPrivateViewer = false;
+let privatePricingMap = {}; // productId -> السعر الخاص
+
+const privateLoginLink = document.getElementById("privateLoginLink");
+const privateLoginModal = document.getElementById("privateLoginModal");
+const privateLoginForm = document.getElementById("privateLoginForm");
+const privateLoginEmail = document.getElementById("privateLoginEmail");
+const privateLoginPassword = document.getElementById("privateLoginPassword");
+const privateLoginError = document.getElementById("privateLoginError");
+const privateLoginCloseBtn = document.getElementById("privateLoginCloseBtn");
+const privateBanner = document.getElementById("privateBanner");
+const privateLogoutBtn = document.getElementById("privateLogoutBtn");
+
+function openPrivateLoginModal() {
+  privateLoginError.classList.add("hidden");
+  privateLoginModal.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function closePrivateLoginModal() {
+  privateLoginModal.classList.remove("active");
+  document.body.style.overflow = "";
+  privateLoginForm.reset();
+}
+
+privateLoginLink.addEventListener("click", openPrivateLoginModal);
+privateLoginCloseBtn.addEventListener("click", closePrivateLoginModal);
+privateLoginModal.addEventListener("click", (e) => {
+  if (e.target === privateLoginModal) closePrivateLoginModal();
+});
+
+privateLoginForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  privateLoginError.classList.add("hidden");
+
+  const email = privateLoginEmail.value.trim();
+  const password = privateLoginPassword.value.trim();
+  if (!email || !password) return;
+
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    closePrivateLoginModal();
+  } catch (error) {
+    console.error(error);
+    privateLoginError.textContent = "بيانات الدخول غير صحيحة";
+    privateLoginError.classList.remove("hidden");
+  }
+});
+
+privateLogoutBtn.addEventListener("click", () => signOut(auth));
+
+async function loadPrivatePricing() {
+  try {
+    const snapshot = await getDocs(collection(db, "privatePricing"));
+    const map = {};
+    snapshot.docs.forEach(docSnap => {
+      map[docSnap.id] = docSnap.data().price || "";
+    });
+    privatePricingMap = map;
+  } catch (error) {
+    console.error(error);
+    privatePricingMap = {};
+  }
+}
+
+function getDisplayPrice(product) {
+  if (isPrivateViewer && privatePricingMap[product.id]) {
+    return privatePricingMap[product.id];
+  }
+  return product.desc || "";
+}
+
+onAuthStateChanged(auth, async (user) => {
+  const wasPrivateViewer = isPrivateViewer;
+  isPrivateViewer = !!(user && user.email && user.email.toLowerCase() === PRIVATE_VIEWER_EMAIL);
+
+  if (isPrivateViewer) {
+    await loadPrivatePricing();
+    privateBanner.classList.remove("hidden");
+  } else {
+    privatePricingMap = {};
+    privateBanner.classList.add("hidden");
+  }
+
+  if (wasPrivateViewer !== isPrivateViewer) renderProducts();
+});
+
 const PRODUCTS_CACHE_KEY = "al-atmawi-products-cache-v2";
 const PRODUCTS_CACHE_MAX_AGE = 2 * 60 * 1000; // دقيقتين
 
@@ -61,8 +159,9 @@ function openModal(product) {
   modalImg.alt = product.name || "";
   modalName.textContent = product.name || "";
   modalBadge.textContent = product.isOffer ? "🔥 عرض خاص" : "";
-  if (product.desc) {
-    modalDesc.textContent = "السعر: " + product.desc;
+  const displayPrice = getDisplayPrice(product);
+  if (displayPrice) {
+    modalDesc.textContent = "السعر: " + displayPrice;
     modalDesc.style.display = "block";
   } else {
     modalDesc.style.display = "none";
@@ -172,6 +271,7 @@ function getOfferProducts() {
 }
 
 function renderOfferCard(product) {
+  const displayPrice = getDisplayPrice(product);
   return `
     <div class="product-card offer-card product-card-clickable" data-product-id="${product.id}">
       <div class="offer-ribbon">🔥 عرض خاص</div>
@@ -185,7 +285,7 @@ function renderOfferCard(product) {
       </div>
       <div class="product-content">
         <h4>${escapeHtml(product.name)}</h4>
-        ${product.desc ? `<p>السعر: ${escapeHtml(product.desc)}</p>` : ""}
+        ${displayPrice ? `<p>السعر: ${escapeHtml(displayPrice)}</p>` : ""}
       </div>
     </div>
   `;
@@ -219,6 +319,7 @@ function renderOffers() {
 }
 
 function renderProductCard(product) {
+  const displayPrice = getDisplayPrice(product);
   return `
     <div class="product-card product-card-clickable" data-product-id="${product.id}">
       <div class="product-image">
@@ -231,7 +332,7 @@ function renderProductCard(product) {
       </div>
       <div class="product-content">
         <h4>${escapeHtml(product.name)}</h4>
-        ${product.desc ? `<p>السعر: ${escapeHtml(product.desc)}</p>` : ""}
+        ${displayPrice ? `<p>السعر: ${escapeHtml(displayPrice)}</p>` : ""}
       </div>
     </div>
   `;
