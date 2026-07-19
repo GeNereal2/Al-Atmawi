@@ -60,7 +60,7 @@ function openModal(product) {
   modalImg.src = product.image || "";
   modalImg.alt = product.name || "";
   modalName.textContent = product.name || "";
-  modalBadge.textContent = "";
+  modalBadge.textContent = product.isOffer ? "🔥 عرض خاص" : "";
   if (product.desc) {
     modalDesc.textContent = "السعر: " + product.desc;
     modalDesc.style.display = "block";
@@ -93,6 +93,8 @@ document.addEventListener("keydown", (e) => {
 });
 
 const productsCategories = document.getElementById("productsCategories");
+const offersSection = document.getElementById("offers");
+const offersGrid = document.getElementById("offersGrid");
 
 function escapeHtml(text) {
   const div = document.createElement("div");
@@ -160,9 +162,60 @@ function animateCards(container) {
 
 function getProductsByCategory(categoryId) {
   if (categoryId === OTHER_CATEGORY.id) {
-    return allProducts.filter(p => !CATEGORY_IDS.includes(p.category));
+    return allProducts.filter(p => !p.isOffer && !CATEGORY_IDS.includes(p.category));
   }
-  return allProducts.filter(p => p.category === categoryId);
+  return allProducts.filter(p => !p.isOffer && p.category === categoryId);
+}
+
+function getOfferProducts() {
+  return allProducts.filter(p => p.isOffer);
+}
+
+function renderOfferCard(product) {
+  return `
+    <div class="product-card offer-card product-card-clickable" data-product-id="${product.id}">
+      <div class="offer-ribbon">🔥 عرض خاص</div>
+      <div class="product-image">
+        <img
+          src="${escapeHtml(product.image || "")}"
+          alt="${escapeHtml(product.name)}"
+          loading="lazy"
+          decoding="async"
+        >
+      </div>
+      <div class="product-content">
+        <h4>${escapeHtml(product.name)}</h4>
+        ${product.desc ? `<p>السعر: ${escapeHtml(product.desc)}</p>` : ""}
+      </div>
+    </div>
+  `;
+}
+
+function renderOffers() {
+  const offers = getOfferProducts();
+
+  if (!offers.length && !isLoadingProducts) {
+    offersSection.classList.add("hidden");
+    offersGrid.innerHTML = "";
+    return;
+  }
+
+  offersSection.classList.remove("hidden");
+
+  offersGrid.innerHTML = !offers.length && isLoadingProducts
+    ? getProductSkeletons(4)
+    : offers.map(renderOfferCard).join("");
+
+  animateCards(offersSection);
+
+  offersGrid.querySelectorAll(".product-card-clickable").forEach(card => {
+    card.addEventListener("click", () => {
+      const productId = card.dataset.productId;
+      const product = allProducts.find(p => p.id === productId);
+      if (!product) return;
+      openModal(product);
+    });
+  });
 }
 
 function renderProductCard(product) {
@@ -218,6 +271,8 @@ function renderCategorySection(category) {
 }
 
 function renderProducts() {
+  renderOffers();
+
   const hasOtherItems = getProductsByCategory(OTHER_CATEGORY.id).length > 0;
   const allSections = hasOtherItems ? [...CATEGORIES, OTHER_CATEGORY] : CATEGORIES;
 
