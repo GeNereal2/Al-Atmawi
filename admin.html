@@ -95,6 +95,14 @@
               </div>
 
               <div class="form-group">
+                <label for="productListingType">مكان عرض المنتج</label>
+                <select id="productListingType" required>
+                  <option value="normal">منتج عادي (يظهر ضمن قسم المنتجات)</option>
+                  <option value="offer">🔥 عرض خاص (يظهر بقسم العروض بالأعلى)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
                 <label for="productCategory">نوع المنتج</label>
                 <select id="productCategory" required>
                   <option value="drinks">مشروبات</option>
@@ -158,7 +166,7 @@
     </div>
   </div>
 
-  <script type="module" src="admin.js?v=11"></script>
+  <script type="module" src="admin.js?v=12"></script>
   <script>
     /* Confirm Modal Helper */
     window.showConfirmModal = function(title, msg) {
