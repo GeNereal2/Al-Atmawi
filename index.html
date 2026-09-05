@@ -31,7 +31,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://firestore.googleapis.com">
   <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
-  <link rel="stylesheet" href="style.css?v=4" />
+  <link rel="stylesheet" href="style.css?v=5" />
 </head>
 <body>
 
@@ -50,7 +50,7 @@
       </nav>
       <div class="header-actions">
         <button id="accountBtn" class="header-icon-btn" type="button" title="حسابي">
-          <span id="accountBtnLabel">👤 دخول</span>
+          👤 <span id="accountBtnLabel" class="header-btn-text">دخول</span>
         </button>
         <button id="cartBtn" class="header-icon-btn cart-btn" type="button" title="السلة">
           🛒 <span id="cartCount" class="cart-count hidden">0</span>
@@ -285,7 +285,7 @@
 
   <div id="toastMsg" class="toast-msg"></div>
 
-  <script type="module" src="script.js?v=22"></script>
+  <script type="module" src="script.js?v=23"></script>
   <script>
     /* Animated Counters */
     function animateCounter(el, target) {
