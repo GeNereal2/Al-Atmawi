@@ -2,15 +2,19 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import {
   getFirestore,
   collection,
+  addDoc,
   getDocs,
   doc,
   getDoc,
   query,
-  orderBy
+  orderBy,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
   getAuth,
+  createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  updateProfile,
   signOut,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -142,9 +146,340 @@ onAuthStateChanged(auth, async (user) => {
   }
 
   if (wasPrivateViewer !== isPrivateViewer) renderProducts();
+
+  // حساب الزبون العادي (أي مستخدم مسجل غير حساب الأسعار الخاصة)
+  currentCustomerUser = (user && !isPrivateViewer) ? user : null;
+  updateAccountUI();
 });
 
-const PRODUCTS_CACHE_KEY = "al-atmawi-products-cache-v2";
+/* =========================
+   Customer Account (تسجيل زبون عادي)
+========================= */
+let currentCustomerUser = null;
+
+const accountBtn = document.getElementById("accountBtn");
+const accountBtnLabel = document.getElementById("accountBtnLabel");
+const accountModal = document.getElementById("accountModal");
+const accountModalCloseBtn = document.getElementById("accountModalCloseBtn");
+
+const customerAuthViews = document.getElementById("customerAuthViews");
+const customerLoginView = document.getElementById("customerLoginView");
+const customerSignupView = document.getElementById("customerSignupView");
+const customerAccountView = document.getElementById("customerAccountView");
+
+const customerLoginForm = document.getElementById("customerLoginForm");
+const customerLoginEmail = document.getElementById("customerLoginEmail");
+const customerLoginPassword = document.getElementById("customerLoginPassword");
+const customerLoginError = document.getElementById("customerLoginError");
+
+const customerSignupForm = document.getElementById("customerSignupForm");
+const customerSignupName = document.getElementById("customerSignupName");
+const customerSignupEmail = document.getElementById("customerSignupEmail");
+const customerSignupPassword = document.getElementById("customerSignupPassword");
+const customerSignupError = document.getElementById("customerSignupError");
+
+const showSignupBtn = document.getElementById("showSignupBtn");
+const showLoginBtn = document.getElementById("showLoginBtn");
+
+const customerAccountName = document.getElementById("customerAccountName");
+const customerAccountEmail = document.getElementById("customerAccountEmail");
+const customerLogoutBtn = document.getElementById("customerLogoutBtn");
+
+function translateAuthError(error) {
+  const code = error && error.code ? error.code : "";
+  const map = {
+    "auth/email-already-in-use": "هذا البريد الإلكتروني مسجل مسبقًا، جرب تسجل الدخول بدل ما تعمل حساب جديد",
+    "auth/invalid-email": "البريد الإلكتروني غير صحيح",
+    "auth/weak-password": "كلمة المرور لازم تكون 6 أحرف على الأقل",
+    "auth/wrong-password": "كلمة المرور غير صحيحة",
+    "auth/user-not-found": "ما في حساب بهذا البريد الإلكتروني",
+    "auth/invalid-credential": "بيانات الدخول غير صحيحة",
+    "auth/too-many-requests": "محاولات كثيرة، جرب بعد شوي"
+  };
+  return map[code] || "حدث خطأ، حاول مرة ثانية";
+}
+
+function openAccountModal() {
+  accountModal.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function closeAccountModal() {
+  accountModal.classList.remove("active");
+  document.body.style.overflow = "";
+}
+
+function showCustomerLoginView() {
+  customerLoginView.classList.remove("hidden");
+  customerSignupView.classList.add("hidden");
+  customerLoginError.classList.add("hidden");
+}
+
+function showCustomerSignupView() {
+  customerSignupView.classList.remove("hidden");
+  customerLoginView.classList.add("hidden");
+  customerSignupError.classList.add("hidden");
+}
+
+function updateAccountUI() {
+  if (currentCustomerUser) {
+    accountBtnLabel.textContent = `👤 ${currentCustomerUser.displayName || "حسابي"}`;
+    customerAuthViews.classList.add("hidden");
+    customerAccountView.classList.remove("hidden");
+    customerAccountName.textContent = currentCustomerUser.displayName || "";
+    customerAccountEmail.textContent = currentCustomerUser.email || "";
+  } else {
+    accountBtnLabel.textContent = "👤 دخول";
+    customerAccountView.classList.add("hidden");
+    customerAuthViews.classList.remove("hidden");
+    showCustomerLoginView();
+  }
+}
+
+accountBtn.addEventListener("click", openAccountModal);
+accountModalCloseBtn.addEventListener("click", closeAccountModal);
+accountModal.addEventListener("click", (e) => {
+  if (e.target === accountModal) closeAccountModal();
+});
+showSignupBtn.addEventListener("click", showCustomerSignupView);
+showLoginBtn.addEventListener("click", showCustomerLoginView);
+
+customerLoginForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  customerLoginError.classList.add("hidden");
+
+  const email = customerLoginEmail.value.trim();
+  const password = customerLoginPassword.value.trim();
+  if (!email || !password) return;
+
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    customerLoginForm.reset();
+    closeAccountModal();
+  } catch (error) {
+    console.error(error);
+    customerLoginError.textContent = translateAuthError(error);
+    customerLoginError.classList.remove("hidden");
+  }
+});
+
+customerSignupForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  customerSignupError.classList.add("hidden");
+
+  const name = customerSignupName.value.trim();
+  const email = customerSignupEmail.value.trim();
+  const password = customerSignupPassword.value.trim();
+  if (!name || !email || !password) return;
+
+  try {
+    const credential = await createUserWithEmailAndPassword(auth, email, password);
+    await updateProfile(credential.user, { displayName: name });
+    currentCustomerUser = credential.user;
+    updateAccountUI();
+    customerSignupForm.reset();
+    closeAccountModal();
+  } catch (error) {
+    console.error(error);
+    customerSignupError.textContent = translateAuthError(error);
+    customerSignupError.classList.remove("hidden");
+  }
+});
+
+customerLogoutBtn.addEventListener("click", () => signOut(auth));
+
+/* =========================
+   Shopping Cart (سلة المشتريات)
+========================= */
+const CART_STORAGE_KEY = "al-atmawi-cart";
+
+let cart = loadCart();
+
+const cartBtn = document.getElementById("cartBtn");
+const cartCount = document.getElementById("cartCount");
+const cartModal = document.getElementById("cartModal");
+const cartModalCloseBtn = document.getElementById("cartModalCloseBtn");
+const cartItemsList = document.getElementById("cartItemsList");
+const cartEmptyMessage = document.getElementById("cartEmptyMessage");
+const submitOrderBtn = document.getElementById("submitOrderBtn");
+const cartMessage = document.getElementById("cartMessage");
+
+function loadCart() {
+  try {
+    const raw = localStorage.getItem(CART_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveCart() {
+  try {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+  } catch {
+    // تجاهل أخطاء تجاوز المساحة المسموحة
+  }
+}
+
+function getCartCount() {
+  return cart.reduce((sum, item) => sum + item.qty, 0);
+}
+
+function updateCartBadge() {
+  const count = getCartCount();
+  if (count > 0) {
+    cartCount.textContent = count;
+    cartCount.classList.remove("hidden");
+  } else {
+    cartCount.classList.add("hidden");
+  }
+}
+
+function addToCart(product) {
+  if (!currentCustomerUser) {
+    openAccountModal();
+    return;
+  }
+
+  const existing = cart.find(item => item.productId === product.id);
+  if (existing) {
+    existing.qty += 1;
+  } else {
+    cart.push({
+      productId: product.id,
+      name: product.name,
+      image: product.image || "",
+      price: getDisplayPrice(product),
+      qty: 1
+    });
+  }
+  saveCart();
+  updateCartBadge();
+  if (typeof window.showToast === "function") window.showToast("✅ تمت الإضافة للسلة");
+}
+
+function changeCartQty(productId, delta) {
+  const item = cart.find(i => i.productId === productId);
+  if (!item) return;
+  item.qty += delta;
+  if (item.qty <= 0) {
+    cart = cart.filter(i => i.productId !== productId);
+  }
+  saveCart();
+  renderCart();
+  updateCartBadge();
+}
+
+function removeFromCart(productId) {
+  cart = cart.filter(i => i.productId !== productId);
+  saveCart();
+  renderCart();
+  updateCartBadge();
+}
+
+function renderCart() {
+  if (!cart.length) {
+    cartItemsList.innerHTML = "";
+    cartEmptyMessage.classList.remove("hidden");
+    submitOrderBtn.classList.add("hidden");
+    return;
+  }
+
+  cartEmptyMessage.classList.add("hidden");
+  submitOrderBtn.classList.remove("hidden");
+
+  cartItemsList.innerHTML = cart.map(item => `
+    <div class="cart-item" data-cart-product-id="${item.productId}">
+      <div class="cart-item-image">
+        <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" loading="lazy" />
+      </div>
+      <div class="cart-item-info">
+        <h4>${escapeHtml(item.name)}</h4>
+        ${item.price ? `<p>${escapeHtml(item.price)}</p>` : ""}
+      </div>
+      <div class="cart-item-qty">
+        <button type="button" data-qty-decrease="${item.productId}">−</button>
+        <span>${item.qty}</span>
+        <button type="button" data-qty-increase="${item.productId}">+</button>
+      </div>
+      <button type="button" class="cart-item-remove" data-cart-remove="${item.productId}">🗑️</button>
+    </div>
+  `).join("");
+
+  cartItemsList.querySelectorAll("[data-qty-decrease]").forEach(btn => {
+    btn.addEventListener("click", () => changeCartQty(btn.dataset.qtyDecrease, -1));
+  });
+  cartItemsList.querySelectorAll("[data-qty-increase]").forEach(btn => {
+    btn.addEventListener("click", () => changeCartQty(btn.dataset.qtyIncrease, 1));
+  });
+  cartItemsList.querySelectorAll("[data-cart-remove]").forEach(btn => {
+    btn.addEventListener("click", () => removeFromCart(btn.dataset.cartRemove));
+  });
+}
+
+function openCartModal() {
+  renderCart();
+  cartMessage.classList.add("hidden");
+  cartModal.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function closeCartModal() {
+  cartModal.classList.remove("active");
+  document.body.style.overflow = "";
+}
+
+cartBtn.addEventListener("click", openCartModal);
+cartModalCloseBtn.addEventListener("click", closeCartModal);
+cartModal.addEventListener("click", (e) => {
+  if (e.target === cartModal) closeCartModal();
+});
+
+submitOrderBtn.addEventListener("click", async () => {
+  cartMessage.classList.add("hidden");
+
+  if (!currentCustomerUser) {
+    openAccountModal();
+    return;
+  }
+  if (!cart.length) return;
+
+  submitOrderBtn.disabled = true;
+  submitOrderBtn.textContent = "جاري الإرسال...";
+
+  try {
+    await addDoc(collection(db, "orders"), {
+      customerName: currentCustomerUser.displayName || "بدون اسم",
+      customerEmail: currentCustomerUser.email || "",
+      customerUid: currentCustomerUser.uid,
+      items: cart.map(item => ({
+        productId: item.productId,
+        name: item.name,
+        qty: item.qty,
+        price: item.price || ""
+      })),
+      status: "جديد",
+      createdAt: serverTimestamp()
+    });
+
+    cart = [];
+    saveCart();
+    renderCart();
+    updateCartBadge();
+    closeCartModal();
+    if (typeof window.showToast === "function") window.showToast("✅ تم إرسال طلبك بنجاح، رح نتواصل معك قريبًا");
+  } catch (error) {
+    console.error(error);
+    cartMessage.textContent = "حدث خطأ أثناء إرسال الطلب، حاول مرة ثانية";
+    cartMessage.classList.remove("hidden");
+  } finally {
+    submitOrderBtn.disabled = false;
+    submitOrderBtn.textContent = "إرسال الطلب";
+  }
+});
+
+updateCartBadge();
 const PRODUCTS_CACHE_MAX_AGE = 2 * 60 * 1000; // دقيقتين
 
 const productModal = document.getElementById("productModal");
@@ -286,6 +621,7 @@ function renderOfferCard(product) {
       <div class="product-content">
         <h4>${escapeHtml(product.name)}</h4>
         ${displayPrice ? `<p>السعر: ${escapeHtml(displayPrice)}</p>` : ""}
+        <button type="button" class="add-to-cart-btn" data-add-to-cart="${product.id}">أضف للسلة 🛒</button>
       </div>
     </div>
   `;
@@ -316,6 +652,14 @@ function renderOffers() {
       openModal(product);
     });
   });
+
+  offersGrid.querySelectorAll("[data-add-to-cart]").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const product = allProducts.find(p => p.id === btn.dataset.addToCart);
+      if (product) addToCart(product);
+    });
+  });
 }
 
 function renderProductCard(product) {
@@ -333,6 +677,7 @@ function renderProductCard(product) {
       <div class="product-content">
         <h4>${escapeHtml(product.name)}</h4>
         ${displayPrice ? `<p>السعر: ${escapeHtml(displayPrice)}</p>` : ""}
+        <button type="button" class="add-to-cart-btn" data-add-to-cart="${product.id}">أضف للسلة 🛒</button>
       </div>
     </div>
   `;
@@ -409,6 +754,14 @@ function renderProducts() {
       const product = allProducts.find(p => p.id === productId);
       if (!product) return;
       openModal(product);
+    });
+  });
+
+  productsCategories.querySelectorAll("[data-add-to-cart]").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const product = allProducts.find(p => p.id === btn.dataset.addToCart);
+      if (product) addToCart(product);
     });
   });
 
