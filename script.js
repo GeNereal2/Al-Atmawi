@@ -360,8 +360,6 @@ const cartSubtotalAmount = document.getElementById("cartSubtotalAmount");
 const cartDeliveryRow = document.getElementById("cartDeliveryRow");
 const cartDeliveryLabel = document.getElementById("cartDeliveryLabel");
 const cartDeliveryAmount = document.getElementById("cartDeliveryAmount");
-const cartTotalRow = document.getElementById("cartTotalRow");
-const cartTotalAmount = document.getElementById("cartTotalAmount");
 const cartParcelNote = document.getElementById("cartParcelNote");
 const submitOrderBtn = document.getElementById("submitOrderBtn");
 const cartMessage = document.getElementById("cartMessage");
@@ -468,7 +466,6 @@ function renderCart() {
     cartEmptyMessage.classList.remove("hidden");
     cartSubtotalRow.classList.add("hidden");
     cartDeliveryRow.classList.add("hidden");
-    cartTotalRow.classList.add("hidden");
     cartParcelNote.classList.add("hidden");
     submitOrderBtn.classList.add("hidden");
     return;
@@ -479,7 +476,6 @@ function renderCart() {
 
   const subtotal = calculateCartTotal();
   const deliveryFee = getDeliveryFee();
-  const grandTotal = subtotal + deliveryFee;
 
   if (subtotal > 0) {
     cartSubtotalAmount.textContent = subtotal.toLocaleString("ar-EG");
@@ -489,20 +485,13 @@ function renderCart() {
   }
 
   if (currentCustomerRegion && deliveryFee > 0) {
-    cartDeliveryLabel.textContent = `التوصيل (${getRegionLabel()})`;
+    cartDeliveryLabel.textContent = `سعر التوصيل (${getRegionLabel()})`;
     cartDeliveryAmount.textContent = deliveryFee.toLocaleString("ar-EG");
     cartDeliveryRow.classList.remove("hidden");
     cartParcelNote.classList.remove("hidden");
   } else {
     cartDeliveryRow.classList.add("hidden");
     cartParcelNote.classList.add("hidden");
-  }
-
-  if (grandTotal > 0) {
-    cartTotalAmount.textContent = grandTotal.toLocaleString("ar-EG");
-    cartTotalRow.classList.remove("hidden");
-  } else {
-    cartTotalRow.classList.add("hidden");
   }
 
   cartItemsList.innerHTML = cart.map(item => `
@@ -588,9 +577,8 @@ submitOrderBtn.addEventListener("click", async () => {
         qty: item.qty,
         price: item.price || ""
       })),
-      subtotal,
+      total: subtotal,
       deliveryFee,
-      total: subtotal + deliveryFee,
       status: "جديد",
       createdAt: serverTimestamp()
     });
