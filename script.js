@@ -194,7 +194,7 @@ function showCustomerSignupView() {
 
 function updateAccountUI() {
   if (currentCustomerUser) {
-    accountBtnLabel.textContent = `👤 ${currentCustomerUser.displayName || "حسابي"}`;
+    accountBtnLabel.textContent = currentCustomerUser.displayName || "حسابي";
     customerAuthViews.classList.add("hidden");
     customerAccountView.classList.remove("hidden");
     customerAccountName.textContent = currentCustomerUser.displayName || "";
@@ -203,7 +203,7 @@ function updateAccountUI() {
     customerAccountPhone.value = currentCustomerPhone || "";
     customerPhoneMessage.classList.add("hidden");
   } else {
-    accountBtnLabel.textContent = "👤 دخول";
+    accountBtnLabel.textContent = "دخول";
     customerAccountView.classList.add("hidden");
     customerAuthViews.classList.remove("hidden");
     showCustomerLoginView();
@@ -311,7 +311,7 @@ saveCustomerPhoneBtn.addEventListener("click", async () => {
     await saveCustomerProfile(phone, name);
     currentCustomerPhone = phone;
     customerAccountName.textContent = name;
-    accountBtnLabel.textContent = `👤 ${name}`;
+    accountBtnLabel.textContent = name;
     if (typeof window.showToast === "function") window.showToast("✅ تم حفظ بياناتك");
   } catch (error) {
     console.error(error);
