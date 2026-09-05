@@ -916,9 +916,8 @@ function renderOrdersList() {
         ${(order.items || []).map(item => `
           <li>${escapeHtml(item.name || "")} × ${escapeHtml(String(item.qty || 1))}${item.price ? ` — ${escapeHtml(item.price)}` : ""}</li>
         `).join("")}
-        ${order.subtotal ? `<li>مجموع المنتجات: ${escapeHtml(String(order.subtotal))}</li>` : ""}
-        ${order.deliveryFee ? `<li>التوصيل: ${escapeHtml(String(order.deliveryFee))}</li>` : ""}
         ${order.total ? `<li class="order-total-line">المبلغ المطلوب: ${escapeHtml(String(order.total))}</li>` : ""}
+        ${order.deliveryFee ? `<li>سعر التوصيل: ${escapeHtml(String(order.deliveryFee))}</li>` : ""}
       </ul>
       <div class="order-item-actions">
         <select data-order-status="${order.id}">
