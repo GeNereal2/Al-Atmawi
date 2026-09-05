@@ -233,11 +233,15 @@
           <h3 id="customerAccountName" style="margin-bottom:6px"></h3>
           <p class="admin-note" id="customerAccountEmail" style="margin-bottom:20px"></p>
           <div class="form-group" style="text-align:right">
+            <label for="customerAccountNameInput">اسمك</label>
+            <input type="text" id="customerAccountNameInput" placeholder="اكتب اسمك الكامل" />
+          </div>
+          <div class="form-group" style="text-align:right">
             <label for="customerAccountPhone">رقم الواتساب للتواصل</label>
             <input type="tel" id="customerAccountPhone" placeholder="9705xxxxxxx" />
           </div>
           <p id="customerPhoneMessage" class="error-message hidden"></p>
-          <button id="saveCustomerPhoneBtn" class="btn btn-outline full-btn" type="button" style="margin-bottom:12px">حفظ الرقم</button>
+          <button id="saveCustomerPhoneBtn" class="btn btn-outline full-btn" type="button" style="margin-bottom:12px">حفظ البيانات</button>
           <button id="customerLogoutBtn" class="btn btn-light full-btn" type="button">تسجيل خروج</button>
         </div>
 
@@ -281,7 +285,7 @@
 
   <div id="toastMsg" class="toast-msg"></div>
 
-  <script type="module" src="script.js?v=21"></script>
+  <script type="module" src="script.js?v=22"></script>
   <script>
     /* Animated Counters */
     function animateCounter(el, target) {
