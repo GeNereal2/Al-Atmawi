@@ -105,8 +105,8 @@ onAuthStateChanged(auth, async (user) => {
 
   if (wasPrivateViewer !== isPrivateViewer) renderProducts();
 
-  // حساب الزبون العادي (أي مستخدم مسجل غير حساب الأسعار الخاصة)
-  currentCustomerUser = (user && !isPrivateViewer) ? user : null;
+  // حساب الزبون العادي (أي مستخدم مسجل، بما فيهم حساب الأسعار الخاصة نفسه)
+  currentCustomerUser = user || null;
 
   if (currentCustomerUser) {
     await loadCustomerProfile(currentCustomerUser.uid);
@@ -150,6 +150,7 @@ const showLoginBtn = document.getElementById("showLoginBtn");
 
 const customerAccountName = document.getElementById("customerAccountName");
 const customerAccountEmail = document.getElementById("customerAccountEmail");
+const customerAccountNameInput = document.getElementById("customerAccountNameInput");
 const customerAccountPhone = document.getElementById("customerAccountPhone");
 const customerPhoneMessage = document.getElementById("customerPhoneMessage");
 const saveCustomerPhoneBtn = document.getElementById("saveCustomerPhoneBtn");
@@ -198,6 +199,7 @@ function updateAccountUI() {
     customerAccountView.classList.remove("hidden");
     customerAccountName.textContent = currentCustomerUser.displayName || "";
     customerAccountEmail.textContent = currentCustomerUser.email || "";
+    customerAccountNameInput.value = currentCustomerUser.displayName || "";
     customerAccountPhone.value = currentCustomerPhone || "";
     customerPhoneMessage.classList.add("hidden");
   } else {
@@ -218,10 +220,10 @@ async function loadCustomerProfile(uid) {
   }
 }
 
-async function saveCustomerProfile(phone) {
+async function saveCustomerProfile(phone, name) {
   if (!currentCustomerUser) return;
   await setDoc(doc(db, "customers", currentCustomerUser.uid), {
-    name: currentCustomerUser.displayName || "",
+    name: name || currentCustomerUser.displayName || "",
     email: currentCustomerUser.email || "",
     phone,
     updatedAt: serverTimestamp()
@@ -290,10 +292,11 @@ customerLogoutBtn.addEventListener("click", () => signOut(auth));
 
 saveCustomerPhoneBtn.addEventListener("click", async () => {
   customerPhoneMessage.classList.add("hidden");
+  const name = customerAccountNameInput.value.trim();
   const phone = customerAccountPhone.value.trim();
 
-  if (!phone) {
-    customerPhoneMessage.textContent = "اكتب رقم الواتساب أولاً";
+  if (!name || !phone) {
+    customerPhoneMessage.textContent = "اكتب اسمك ورقم الواتساب أولاً";
     customerPhoneMessage.classList.remove("hidden");
     return;
   }
@@ -302,16 +305,21 @@ saveCustomerPhoneBtn.addEventListener("click", async () => {
   saveCustomerPhoneBtn.textContent = "جاري الحفظ...";
 
   try {
-    await saveCustomerProfile(phone);
+    if (currentCustomerUser.displayName !== name) {
+      await updateProfile(currentCustomerUser, { displayName: name });
+    }
+    await saveCustomerProfile(phone, name);
     currentCustomerPhone = phone;
-    if (typeof window.showToast === "function") window.showToast("✅ تم حفظ رقم الواتساب");
+    customerAccountName.textContent = name;
+    accountBtnLabel.textContent = `👤 ${name}`;
+    if (typeof window.showToast === "function") window.showToast("✅ تم حفظ بياناتك");
   } catch (error) {
     console.error(error);
-    customerPhoneMessage.textContent = "حدث خطأ أثناء حفظ الرقم";
+    customerPhoneMessage.textContent = "حدث خطأ أثناء حفظ البيانات";
     customerPhoneMessage.classList.remove("hidden");
   } finally {
     saveCustomerPhoneBtn.disabled = false;
-    saveCustomerPhoneBtn.textContent = "حفظ الرقم";
+    saveCustomerPhoneBtn.textContent = "حفظ البيانات";
   }
 });
 
