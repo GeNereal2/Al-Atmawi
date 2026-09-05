@@ -1167,7 +1167,7 @@ footer {
   .header-actions { order:-1; }
 }
 @media (max-width:480px) {
-  .header-icon-btn span:not(.cart-count) { display:none; }
+  .header-icon-btn .header-btn-text { display:none; }
   .header-icon-btn { padding:8px 10px; }
 }
 
