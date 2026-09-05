@@ -73,6 +73,11 @@ let adminProductsHasMore = false;
 let adminProductsLoading = false;
 let productSearchTerm = "";
 
+/* Orders */
+let allOrders = [];
+let ordersLoading = false;
+let orderSearchTerm = "";
+
 /* Auth */
 const loginBox = document.getElementById("loginBox");
 const dashboardBox = document.getElementById("dashboardBox");
@@ -102,6 +107,12 @@ const productSubmitBtn = document.getElementById("productSubmitBtn");
 const cancelProductEditBtn = document.getElementById("cancelProductEditBtn");
 const adminProductsList = document.getElementById("adminProductsList");
 const adminProductsSearchInput = document.getElementById("adminProductsSearch");
+
+/* Orders */
+const adminOrdersList = document.getElementById("adminOrdersList");
+const adminOrdersSearchInput = document.getElementById("adminOrdersSearch");
+const refreshOrdersBtn = document.getElementById("refreshOrdersBtn");
+const ordersCountBadge = document.getElementById("ordersCountBadge");
 
 /* =========================
    Confirm Modal
@@ -819,6 +830,150 @@ async function loadMoreAdminProducts() {
   }
 }
 
+/* =========================
+   Orders (الطلبات)
+========================= */
+function formatOrderDate(timestamp) {
+  if (!timestamp) return "";
+  try {
+    const dateObj = typeof timestamp.toDate === "function" ? timestamp.toDate() : new Date(timestamp);
+    return dateObj.toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short" });
+  } catch {
+    return "";
+  }
+}
+
+async function loadOrders() {
+  if (!isOwner(auth.currentUser)) return;
+
+  ordersLoading = true;
+  renderOrdersList();
+
+  try {
+    const ordersQuery = query(collection(db, "orders"), orderBy("customerName", "asc"));
+    const snapshot = await getDocs(ordersQuery);
+
+    allOrders = snapshot.docs
+      .map(docSnap => ({ id: docSnap.id, ...docSnap.data() }))
+      .sort((a, b) => {
+        const nameCompare = (a.customerName || "").localeCompare(b.customerName || "", "ar");
+        if (nameCompare !== 0) return nameCompare;
+        const aTime = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+        const bTime = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+        return bTime - aTime;
+      });
+  } catch (error) {
+    console.error(error);
+    if (adminOrdersList) {
+      adminOrdersList.innerHTML = `<div class="empty-message">حدث خطأ أثناء تحميل الطلبات</div>`;
+    }
+  } finally {
+    ordersLoading = false;
+    renderOrdersList();
+  }
+}
+
+function renderOrdersList() {
+  if (!adminOrdersList) return;
+
+  const newOrdersCount = allOrders.filter(o => o.status === "جديد").length;
+  if (ordersCountBadge) {
+    if (newOrdersCount > 0) {
+      ordersCountBadge.textContent = newOrdersCount;
+      ordersCountBadge.classList.remove("hidden");
+    } else {
+      ordersCountBadge.classList.add("hidden");
+    }
+  }
+
+  if (ordersLoading && !allOrders.length) {
+    adminOrdersList.innerHTML = `<div class="empty-message">جاري تحميل الطلبات...</div>`;
+    return;
+  }
+
+  const term = orderSearchTerm.trim().toLowerCase();
+  const filtered = term
+    ? allOrders.filter(o => (o.customerName || "").toLowerCase().includes(term))
+    : allOrders;
+
+  if (!filtered.length) {
+    adminOrdersList.innerHTML = `<div class="empty-message">${term ? "ما في طلبات مطابقة للبحث" : "لا توجد طلبات حاليًا"}</div>`;
+    return;
+  }
+
+  adminOrdersList.innerHTML = filtered.map(order => `
+    <div class="admin-item order-item">
+      <div class="order-item-head">
+        <div>
+          <h4>${escapeHtml(order.customerName || "بدون اسم")}</h4>
+          <span class="admin-item-category">${escapeHtml(order.customerEmail || "")}</span>
+        </div>
+        <span class="order-date">${escapeHtml(formatOrderDate(order.createdAt))}</span>
+      </div>
+      <ul class="order-items-list">
+        ${(order.items || []).map(item => `
+          <li>${escapeHtml(item.name || "")} × ${escapeHtml(String(item.qty || 1))}${item.price ? ` — ${escapeHtml(item.price)}` : ""}</li>
+        `).join("")}
+      </ul>
+      <div class="order-item-actions">
+        <select data-order-status="${order.id}">
+          <option value="جديد" ${order.status === "جديد" ? "selected" : ""}>🆕 جديد</option>
+          <option value="تم التواصل" ${order.status === "تم التواصل" ? "selected" : ""}>📞 تم التواصل</option>
+          <option value="مكتمل" ${order.status === "مكتمل" ? "selected" : ""}>✅ مكتمل</option>
+        </select>
+        <button class="action-btn delete-btn" data-order-delete="${order.id}">حذف</button>
+      </div>
+    </div>
+  `).join("");
+
+  adminOrdersList.querySelectorAll("[data-order-status]").forEach(select => {
+    select.addEventListener("change", () => updateOrderStatus(select.dataset.orderStatus, select.value));
+  });
+  adminOrdersList.querySelectorAll("[data-order-delete]").forEach(btn => {
+    btn.addEventListener("click", () => deleteOrder(btn.dataset.orderDelete));
+  });
+}
+
+async function updateOrderStatus(orderId, status) {
+  if (!isOwner(auth.currentUser)) return;
+  try {
+    await updateDoc(doc(db, "orders", orderId), { status });
+    const order = allOrders.find(o => o.id === orderId);
+    if (order) order.status = status;
+    renderOrdersList();
+  } catch (error) {
+    console.error(error);
+    alert("حدث خطأ أثناء تحديث حالة الطلب");
+  }
+}
+
+async function deleteOrder(orderId) {
+  if (!isOwner(auth.currentUser)) return;
+
+  const confirmed = await showConfirmModal("حذف الطلب", "هل أنت متأكد من حذف هذا الطلب؟");
+  if (!confirmed) return;
+
+  try {
+    await deleteDoc(doc(db, "orders", orderId));
+    allOrders = allOrders.filter(o => o.id !== orderId);
+    renderOrdersList();
+  } catch (error) {
+    console.error(error);
+    alert("حدث خطأ أثناء حذف الطلب");
+  }
+}
+
+if (adminOrdersSearchInput) {
+  adminOrdersSearchInput.addEventListener("input", () => {
+    orderSearchTerm = adminOrdersSearchInput.value;
+    renderOrdersList();
+  });
+}
+
+if (refreshOrdersBtn) {
+  refreshOrdersBtn.addEventListener("click", () => loadOrders());
+}
+
 async function refreshAllAdminData() {
   await loadInitialAdminProducts();
   renderDashboardData();
@@ -835,6 +990,7 @@ onAuthStateChanged(auth, async (user) => {
     adminProductsCursor = 0;
     adminProductsHasMore = false;
     adminProductsLoading = false;
+    allOrders = [];
     updateAdminUI(null);
     return;
   }
@@ -849,6 +1005,7 @@ onAuthStateChanged(auth, async (user) => {
   updateAdminUI(user);
 
   await loadInitialAdminProducts();
+  await loadOrders();
 
   renderDashboardData();
   updateCounters();
