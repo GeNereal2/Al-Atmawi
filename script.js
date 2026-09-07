@@ -1,4 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
 import {
   getFirestore,
   collection,
@@ -33,6 +34,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
+try {
+  getAnalytics(app);
+} catch (error) {
+  console.error("Analytics init failed:", error);
+}
 
 /* =========================
    Categories
