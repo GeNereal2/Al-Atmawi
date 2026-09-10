@@ -1039,6 +1039,15 @@ footer {
 [data-theme="dark"] .order-items-list { background:rgba(201,151,62,0.1); color:#f0e8df; }
 [data-theme="dark"] .order-item-actions select { background:#2a1a10; color:#f0e8df; border-color:rgba(240,232,223,0.14); }
 
+/* ===== My Orders (صفحة الزبون) ===== */
+.my-orders-list { display:flex; flex-direction:column; gap:16px; max-height:440px; overflow-y:auto; }
+.order-history-item { border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px 16px; }
+.order-history-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px; }
+.order-history-date { font-size:0.85rem; color:var(--muted); }
+.order-history-status { font-size:0.85rem; font-weight:800; color:var(--choco-dark); background:var(--gold-pale); padding:3px 12px; border-radius:999px; }
+[data-theme="dark"] .order-history-item { border-color:rgba(240,232,223,0.14); }
+[data-theme="dark"] .order-history-status { background:rgba(201,151,62,0.12); color:#f0e8df; }
+
 .success-message,.error-message { margin-top:14px; padding:14px 18px; border-radius:var(--radius-sm); font-weight:700; font-size:0.93rem; }
 .success-message { background:rgba(43,138,62,0.1); color:var(--success); border:1px solid rgba(43,138,62,0.2); }
 .error-message   { background:rgba(187,45,59,0.08); color:var(--danger); border:1px solid rgba(187,45,59,0.18); }
