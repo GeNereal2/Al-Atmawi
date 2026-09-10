@@ -266,6 +266,7 @@
           </div>
           <p id="customerPhoneMessage" class="error-message hidden"></p>
           <button id="saveCustomerPhoneBtn" class="btn btn-outline full-btn" type="button" style="margin-bottom:12px">حفظ البيانات</button>
+          <button id="viewMyOrdersBtn" class="btn btn-outline full-btn" type="button" style="margin-bottom:12px">📦 طلباتي السابقة</button>
           <button id="customerLogoutBtn" class="btn btn-light full-btn" type="button">تسجيل خروج</button>
         </div>
 
@@ -298,6 +299,38 @@
     </div>
   </div>
 
+  <!-- My Orders Modal -->
+  <div class="modal-overlay" id="myOrdersModal">
+    <div class="modal-box" style="max-width:500px">
+      <button class="modal-close" id="myOrdersCloseBtn" type="button">✕</button>
+      <div class="modal-info" style="padding:32px 28px">
+        <h3 style="margin-bottom:20px">📦 طلباتي السابقة</h3>
+        <div id="myOrdersList" class="my-orders-list"></div>
+        <div id="myOrdersEmpty" class="empty-message hidden">ما في طلبات سابقة لسا</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Order Modal -->
+  <div class="modal-overlay" id="editOrderModal">
+    <div class="modal-box" style="max-width:480px">
+      <button class="modal-close" id="editOrderCloseBtn" type="button">✕</button>
+      <div class="modal-info" style="padding:32px 28px">
+        <h3 style="margin-bottom:8px">✏️ تعديل الطلب</h3>
+        <p class="admin-note" style="margin-bottom:20px">تقدر تغيّر الكمية أو تحذف منتج. التعديل متاح بس لما تكون حالة الطلب "جديد".</p>
+        <div id="editOrderItemsList" class="cart-items-list"></div>
+        <div id="editOrderEmpty" class="empty-message hidden">لازم يضل منتج واحد عالأقل بالطلب</div>
+        <div id="editOrderSubtotalRow" class="cart-total-row hidden">
+          <span>المبلغ المطلوب (غير شامل التوصيل)</span>
+          <strong id="editOrderSubtotalAmount">0</strong>
+        </div>
+        <p id="editOrderMessage" class="error-message hidden" style="margin-top:12px"></p>
+        <button id="saveEditOrderBtn" class="btn btn-primary full-btn" type="button" style="margin-top:16px">حفظ التعديلات</button>
+        <button id="cancelOrderBtn" class="btn btn-light full-btn" type="button" style="margin-top:10px;color:#a8281a">🗑️ إلغاء الطلب بالكامل</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal -->
   <div class="modal-overlay" id="productModal">
     <div class="modal-box">
@@ -316,7 +349,7 @@
 
   <div id="toastMsg" class="toast-msg"></div>
 
-  <script type="module" src="script.js?v=29"></script>
+  <script type="module" src="script.js?v=30"></script>
   <script>
     /* Animated Counters */
     function animateCounter(el, target) {
