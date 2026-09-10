@@ -5,10 +5,13 @@ import {
   collection,
   addDoc,
   setDoc,
+  updateDoc,
+  deleteDoc,
   getDocs,
   doc,
   getDoc,
   query,
+  where,
   orderBy,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -312,6 +315,257 @@ customerSignupForm.addEventListener("submit", async (e) => {
 });
 
 customerLogoutBtn.addEventListener("click", () => signOut(auth));
+
+/* =========================
+   My Orders (طلباتي السابقة + تعديل/إلغاء الطلب)
+========================= */
+const EDITABLE_STATUS = "جديد"; // التعديل والإلغاء متاحين بس لما تكون حالة الطلب لسا "جديد"
+
+const ORDER_STATUS_LABELS = {
+  "جديد": "🆕 جديد",
+  "تم التواصل": "📞 تم التواصل",
+  "مكتمل": "✅ مكتمل"
+};
+
+const viewMyOrdersBtn = document.getElementById("viewMyOrdersBtn");
+const myOrdersModal = document.getElementById("myOrdersModal");
+const myOrdersCloseBtn = document.getElementById("myOrdersCloseBtn");
+const myOrdersList = document.getElementById("myOrdersList");
+const myOrdersEmpty = document.getElementById("myOrdersEmpty");
+
+const editOrderModal = document.getElementById("editOrderModal");
+const editOrderCloseBtn = document.getElementById("editOrderCloseBtn");
+const editOrderItemsList = document.getElementById("editOrderItemsList");
+const editOrderEmpty = document.getElementById("editOrderEmpty");
+const editOrderSubtotalRow = document.getElementById("editOrderSubtotalRow");
+const editOrderSubtotalAmount = document.getElementById("editOrderSubtotalAmount");
+const editOrderMessage = document.getElementById("editOrderMessage");
+const saveEditOrderBtn = document.getElementById("saveEditOrderBtn");
+const cancelOrderBtn = document.getElementById("cancelOrderBtn");
+
+let myOrdersCache = [];
+let editingOrderId = null;
+let editingOrderItems = [];
+
+function formatOrderDate(timestamp) {
+  if (!timestamp) return "";
+  try {
+    const dateObj = typeof timestamp.toDate === "function" ? timestamp.toDate() : new Date(timestamp);
+    return dateObj.toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short" });
+  } catch {
+    return "";
+  }
+}
+
+async function loadMyOrders() {
+  if (!currentCustomerUser) return;
+
+  myOrdersList.innerHTML = `<div class="empty-message">جاري التحميل...</div>`;
+  myOrdersEmpty.classList.add("hidden");
+
+  try {
+    const ordersQuery = query(collection(db, "orders"), where("customerUid", "==", currentCustomerUser.uid));
+    const snapshot = await getDocs(ordersQuery);
+
+    myOrdersCache = snapshot.docs
+      .map(docSnap => ({ id: docSnap.id, ...docSnap.data() }))
+      .sort((a, b) => {
+        const aTime = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+        const bTime = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+        return bTime - aTime;
+      });
+
+    renderMyOrders();
+  } catch (error) {
+    console.error(error);
+    myOrdersList.innerHTML = `<div class="empty-message">حدث خطأ أثناء تحميل طلباتك</div>`;
+  }
+}
+
+function renderMyOrders() {
+  if (!myOrdersCache.length) {
+    myOrdersList.innerHTML = "";
+    myOrdersEmpty.classList.remove("hidden");
+    return;
+  }
+
+  myOrdersEmpty.classList.add("hidden");
+
+  myOrdersList.innerHTML = myOrdersCache.map(order => {
+    const isEditable = order.status === EDITABLE_STATUS;
+    return `
+      <div class="order-history-item">
+        <div class="order-history-head">
+          <span class="order-history-date">${escapeHtml(formatOrderDate(order.createdAt))}</span>
+          <span class="order-history-status">${escapeHtml(ORDER_STATUS_LABELS[order.status] || order.status || "")}</span>
+        </div>
+        <ul class="order-items-list">
+          ${(order.items || []).map(item => `
+            <li>${escapeHtml(item.name || "")} × ${escapeHtml(String(item.qty || 1))}${item.price ? ` — ${escapeHtml(item.price)}` : ""}</li>
+          `).join("")}
+          ${order.total ? `<li class="order-total-line">المبلغ المطلوب ( غير شامل التوصيل ): ${escapeHtml(String(order.total))}</li>` : ""}
+          ${order.deliveryFee ? `<li>سعر التوصيل: ${escapeHtml(String(order.deliveryFee))}</li>` : ""}
+        </ul>
+        ${isEditable
+          ? `<button type="button" class="btn btn-outline full-btn" data-edit-order="${order.id}">✏️ تعديل / إلغاء الطلب</button>`
+          : `<p class="admin-note" style="margin-top:6px">التعديل غير متاح — الطلب قيد المعالجة أو مكتمل بالفعل.</p>`}
+      </div>
+    `;
+  }).join("");
+
+  myOrdersList.querySelectorAll("[data-edit-order]").forEach(btn => {
+    btn.addEventListener("click", () => openEditOrderModal(btn.dataset.editOrder));
+  });
+}
+
+function openMyOrdersModal() {
+  loadMyOrders();
+  myOrdersModal.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function closeMyOrdersModal() {
+  myOrdersModal.classList.remove("active");
+  document.body.style.overflow = "";
+}
+
+viewMyOrdersBtn.addEventListener("click", openMyOrdersModal);
+myOrdersCloseBtn.addEventListener("click", closeMyOrdersModal);
+myOrdersModal.addEventListener("click", (e) => {
+  if (e.target === myOrdersModal) closeMyOrdersModal();
+});
+
+/* ===== تعديل / إلغاء طلب ===== */
+function openEditOrderModal(orderId) {
+  const order = myOrdersCache.find(o => o.id === orderId);
+  if (!order || order.status !== EDITABLE_STATUS) return;
+
+  editingOrderId = orderId;
+  editingOrderItems = (order.items || []).map(item => ({ ...item }));
+  editOrderMessage.classList.add("hidden");
+
+  renderEditOrderItems();
+  editOrderModal.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function closeEditOrderModal() {
+  editOrderModal.classList.remove("active");
+  document.body.style.overflow = "";
+  editingOrderId = null;
+  editingOrderItems = [];
+}
+
+function renderEditOrderItems() {
+  if (!editingOrderItems.length) {
+    editOrderItemsList.innerHTML = "";
+    editOrderEmpty.classList.remove("hidden");
+    editOrderSubtotalRow.classList.add("hidden");
+    saveEditOrderBtn.disabled = true;
+    return;
+  }
+
+  editOrderEmpty.classList.add("hidden");
+  saveEditOrderBtn.disabled = false;
+
+  const subtotal = editingOrderItems.reduce((sum, item) => sum + (extractPriceNumber(item.price) * item.qty), 0);
+  if (subtotal > 0) {
+    editOrderSubtotalAmount.textContent = subtotal.toLocaleString("ar-EG");
+    editOrderSubtotalRow.classList.remove("hidden");
+  } else {
+    editOrderSubtotalRow.classList.add("hidden");
+  }
+
+  editOrderItemsList.innerHTML = editingOrderItems.map((item, index) => `
+    <div class="cart-item" data-edit-item-index="${index}">
+      <div class="cart-item-info">
+        <h4>${escapeHtml(item.name || "")}</h4>
+        ${item.price ? `<p>${escapeHtml(item.price)}</p>` : ""}
+      </div>
+      <div class="cart-item-qty">
+        <button type="button" data-edit-qty-decrease="${index}">−</button>
+        <span>${item.qty}</span>
+        <button type="button" data-edit-qty-increase="${index}">+</button>
+      </div>
+      <button type="button" class="cart-item-remove" data-edit-remove="${index}">🗑️</button>
+    </div>
+  `).join("");
+
+  editOrderItemsList.querySelectorAll("[data-edit-qty-decrease]").forEach(btn => {
+    btn.addEventListener("click", () => changeEditQty(parseInt(btn.dataset.editQtyDecrease, 10), -1));
+  });
+  editOrderItemsList.querySelectorAll("[data-edit-qty-increase]").forEach(btn => {
+    btn.addEventListener("click", () => changeEditQty(parseInt(btn.dataset.editQtyIncrease, 10), 1));
+  });
+  editOrderItemsList.querySelectorAll("[data-edit-remove]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      editingOrderItems.splice(parseInt(btn.dataset.editRemove, 10), 1);
+      renderEditOrderItems();
+    });
+  });
+}
+
+function changeEditQty(index, delta) {
+  const item = editingOrderItems[index];
+  if (!item) return;
+  item.qty += delta;
+  if (item.qty <= 0) {
+    editingOrderItems.splice(index, 1);
+  }
+  renderEditOrderItems();
+}
+
+editOrderCloseBtn.addEventListener("click", closeEditOrderModal);
+editOrderModal.addEventListener("click", (e) => {
+  if (e.target === editOrderModal) closeEditOrderModal();
+});
+
+saveEditOrderBtn.addEventListener("click", async () => {
+  editOrderMessage.classList.add("hidden");
+  if (!editingOrderId || !editingOrderItems.length) return;
+
+  saveEditOrderBtn.disabled = true;
+  saveEditOrderBtn.textContent = "جاري الحفظ...";
+
+  try {
+    const newTotal = editingOrderItems.reduce((sum, item) => sum + (extractPriceNumber(item.price) * item.qty), 0);
+    await updateDoc(doc(db, "orders", editingOrderId), {
+      items: editingOrderItems,
+      total: newTotal,
+      updatedAt: serverTimestamp()
+    });
+    closeEditOrderModal();
+    if (typeof window.showToast === "function") window.showToast("✅ تم تعديل الطلب بنجاح");
+    await loadMyOrders();
+  } catch (error) {
+    console.error(error);
+    editOrderMessage.textContent = "حدث خطأ أثناء حفظ التعديل، حاول مرة ثانية";
+    editOrderMessage.classList.remove("hidden");
+  } finally {
+    saveEditOrderBtn.disabled = false;
+    saveEditOrderBtn.textContent = "حفظ التعديلات";
+  }
+});
+
+cancelOrderBtn.addEventListener("click", async () => {
+  if (!editingOrderId) return;
+  const confirmed = window.confirm("متأكد إنك بدك تلغي هذا الطلب بالكامل؟ ما بيرجع بعد الإلغاء.");
+  if (!confirmed) return;
+
+  cancelOrderBtn.disabled = true;
+  try {
+    await deleteDoc(doc(db, "orders", editingOrderId));
+    closeEditOrderModal();
+    if (typeof window.showToast === "function") window.showToast("✅ تم إلغاء الطلب");
+    await loadMyOrders();
+  } catch (error) {
+    console.error(error);
+    editOrderMessage.textContent = "حدث خطأ أثناء إلغاء الطلب، حاول مرة ثانية";
+    editOrderMessage.classList.remove("hidden");
+  } finally {
+    cancelOrderBtn.disabled = false;
+  }
+});
 
 saveCustomerPhoneBtn.addEventListener("click", async () => {
   customerPhoneMessage.classList.add("hidden");
